@@ -1,0 +1,42 @@
+---
+title: 'Create Project'
+openapi: 'POST /api/organizations/{organization_id}/projects/'
+---
+
+Create a new project in an organization.
+
+<Note>
+This endpoint requires authentication with an API token (Bearer token). You can only create projects in organizations you belong to.
+</Note>
+
+## Path Parameters
+
+- `organization_id` (uuid, required): Organization ID
+
+## Request Body
+
+- `name` (string, required): Project name
+
+## Response
+
+Returns the created project with a 201 status code.
+
+```json
+{
+  "id": "uuid",
+  "organization_id": "uuid",
+  "organization_name": "Organization Name",
+  "name": "New Project",
+  "created_at": "2026-04-20T15:32:08.713658Z",
+  "updated_at": "2026-04-20T15:32:08.713664Z"
+}
+```
+
+## Example
+
+```bash
+curl -X POST https://platform-api.sophy.co/api/auth/organizations/{organization_id}/projects/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My New Project"}'
+```

@@ -66,6 +66,18 @@
             ]
           },
           {
+            "group": "Organizations & Projects",
+            "pages": [
+              "api-reference/endpoint/list-organizations",
+              "api-reference/endpoint/get-organization",
+              "api-reference/endpoint/list-projects",
+              "api-reference/endpoint/create-project",
+              "api-reference/endpoint/get-project",
+              "api-reference/endpoint/update-project",
+              "api-reference/endpoint/delete-project"
+            ]
+          },
+          {
             "group": "Transcripts & Dialogues",
             "pages": [
               "api-reference/endpoint/get-transcripts",
