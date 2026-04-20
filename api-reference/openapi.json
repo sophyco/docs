@@ -329,6 +329,19 @@ paths:
       operationId: transcripts_list
       description: List transcripts for a project
       parameters:
+      - in: query
+        name: conversationID
+        schema:
+          type: string
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
+      - in: query
+        name: platform
+        schema:
+          type: string
       - in: path
         name: project_id
         schema:
@@ -336,6 +349,14 @@ paths:
           format: uuid
         description: Project ID
         required: true
+      - in: query
+        name: sessionID
+        schema:
+          type: string
+      - in: query
+        name: unread
+        schema:
+          type: boolean
       tags:
       - transcripts
       security:
@@ -354,6 +375,19 @@ paths:
       operationId: transcripts_dialogues_list
       description: List dialogues for a project
       parameters:
+      - in: query
+        name: conversationID
+        schema:
+          type: string
+      - in: query
+        name: format
+        schema:
+          type: string
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
       - in: path
         name: project_id
         schema:
@@ -361,6 +395,22 @@ paths:
           format: uuid
         description: Project ID
         required: true
+      - in: query
+        name: role
+        schema:
+          type: string
+      - in: query
+        name: sessionID
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+      - in: query
+        name: type
+        schema:
+          type: string
       tags:
       - transcripts
       security:
@@ -600,8 +650,8 @@ components:
         os:
           type: string
         user:
-          type: object
-          additionalProperties: {}
+          allOf:
+          - $ref: '#/components/schemas/TranscriptUser'
           readOnly: true
         createdAt:
           type: string
@@ -623,6 +673,16 @@ components:
       - unread
       - updatedAt
       - user
+    TranscriptUser:
+      type: object
+      properties:
+        name:
+          type: string
+        image:
+          type: string
+      required:
+      - image
+      - name
     TypeEnum:
       enum:
       - user
