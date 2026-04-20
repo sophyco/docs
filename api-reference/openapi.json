@@ -13,11 +13,27 @@ paths:
         Returns user info and API token for subsequent requests.
       tags:
       - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
       security:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
   /api/auth/tokens/:
     get:
       operationId: auth_tokens_list
@@ -93,6 +109,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this api token.
         required: true
       tags:
       - auth
@@ -115,6 +133,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this api token.
         required: true
       tags:
       - auth
@@ -148,6 +168,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this api token.
         required: true
       tags:
       - auth
@@ -304,7 +326,7 @@ paths:
           description: ''
   /api/transcripts/{project_id}/:
     get:
-      operationId: transcripts_retrieve
+      operationId: transcripts_list
       description: List transcripts for a project
       parameters:
       - in: path
@@ -318,10 +340,16 @@ paths:
       - tokenAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transcript'
+          description: ''
   /api/transcripts/{project_id}/dialogues/:
     get:
-      operationId: transcripts_dialogues_retrieve
+      operationId: transcripts_dialogues_list
       description: List dialogues for a project
       parameters:
       - in: path
@@ -335,7 +363,13 @@ paths:
       - tokenAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dialogue'
+          description: ''
 components:
   schemas:
     APIToken:
@@ -369,10 +403,10 @@ components:
           format: date-time
           nullable: true
         is_expired:
-          type: string
+          type: boolean
           readOnly: true
         is_valid:
-          type: string
+          type: boolean
           readOnly: true
         created_at:
           type: string
@@ -391,6 +425,83 @@ components:
       - token
       - updated_at
       - user_id
+    Dialogue:
+      type: object
+      properties:
+        _id:
+          type: string
+          title: ' id'
+        projectID:
+          type: string
+        conversationID:
+          type: string
+        sessionID:
+          type: string
+        role:
+          type: string
+        format:
+          type: string
+        type:
+          type: string
+        message:
+          type: string
+          nullable: true
+        input:
+          type: object
+          additionalProperties: {}
+        payload:
+          type: object
+          additionalProperties: {}
+        parent_message_id:
+          type: string
+          nullable: true
+        proactive:
+          type: boolean
+        source:
+          type: string
+          nullable: true
+        status:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+      required:
+      - _id
+      - conversationID
+      - format
+      - input
+      - message
+      - parent_message_id
+      - payload
+      - proactive
+      - projectID
+      - role
+      - sessionID
+      - source
+      - startTime
+      - status
+      - type
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        token:
+          type: string
+          readOnly: true
+        user:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+      required:
+      - password
+      - token
+      - user
+      - username
     PaginatedAPITokenList:
       type: object
       required:
@@ -445,10 +556,10 @@ components:
           format: date-time
           nullable: true
         is_expired:
-          type: string
+          type: boolean
           readOnly: true
         is_valid:
-          type: string
+          type: boolean
           readOnly: true
         created_at:
           type: string
@@ -458,6 +569,56 @@ components:
           type: string
           format: date-time
           readOnly: true
+    Transcript:
+      type: object
+      properties:
+        _id:
+          type: string
+          title: ' id'
+        projectID:
+          type: string
+        conversationID:
+          type: string
+        sessionID:
+          type: string
+        reportTags:
+          type: array
+          items:
+            type: string
+        unread:
+          type: boolean
+        platform:
+          type: string
+        browser:
+          type: string
+        device:
+          type: string
+        os:
+          type: string
+        user:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - _id
+      - browser
+      - conversationID
+      - createdAt
+      - device
+      - os
+      - platform
+      - projectID
+      - reportTags
+      - sessionID
+      - unread
+      - updatedAt
+      - user
     TypeEnum:
       enum:
       - user
@@ -471,5 +632,5 @@ components:
       type: http
       scheme: bearer
 servers:
-- url: http://localhost:8000
+- url: https://platform-api.sophy.co
   description: API Server
