@@ -1,0 +1,37 @@
+---
+title: 'List Organizations'
+openapi: 'GET /api/organizations/'
+---
+
+List all organizations the authenticated user belongs to.
+
+<Note>
+This endpoint requires authentication with an API token (Bearer token).
+</Note>
+
+## Response
+
+Returns a paginated list of organizations.
+
+```json
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "uuid",
+      "name": "Organization Name",
+      "created_at": "2025-08-25T14:44:21.423505Z",
+      "project_count": 2
+    }
+  ]
+}
+```
+
+## Fields
+
+- `id` (uuid): Organization ID
+- `name` (string): Organization name
+- `created_at` (datetime): Creation timestamp
+- `project_count` (integer): Number of projects in the organization

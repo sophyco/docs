@@ -1,0 +1,45 @@
+---
+title: 'List Projects'
+openapi: 'GET /api/organizations/{organization_id}/projects/'
+---
+
+List all projects in a specific organization.
+
+<Note>
+This endpoint requires authentication with an API token (Bearer token). You can only list projects in organizations you belong to.
+</Note>
+
+## Path Parameters
+
+- `organization_id` (uuid, required): Organization ID
+
+## Response
+
+Returns a paginated list of projects.
+
+```json
+{
+  "count": 2,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "uuid",
+      "organization_id": "uuid",
+      "organization_name": "Organization Name",
+      "name": "Project Name",
+      "created_at": "2025-08-25T14:44:42.414344Z",
+      "updated_at": "2025-08-25T14:44:42.414358Z"
+    }
+  ]
+}
+```
+
+## Fields
+
+- `id` (uuid): Project ID
+- `organization_id` (uuid): Organization ID
+- `organization_name` (string): Organization name
+- `name` (string): Project name
+- `created_at` (datetime): Creation timestamp
+- `updated_at` (datetime): Last update timestamp

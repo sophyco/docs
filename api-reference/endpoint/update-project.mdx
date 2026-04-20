@@ -1,0 +1,43 @@
+---
+title: 'Update Project'
+openapi: 'PATCH /api/organizations/{organization_id}/projects/{id}/'
+---
+
+Update a project's details.
+
+<Note>
+This endpoint requires authentication with an API token (Bearer token). You can only update projects in organizations you belong to.
+</Note>
+
+## Path Parameters
+
+- `organization_id` (uuid, required): Organization ID
+- `id` (uuid, required): Project ID
+
+## Request Body
+
+- `name` (string, optional): Project name
+
+## Response
+
+Returns the updated project.
+
+```json
+{
+  "id": "uuid",
+  "organization_id": "uuid",
+  "organization_name": "Organization Name",
+  "name": "Updated Project Name",
+  "created_at": "2025-08-25T14:44:42.414344Z",
+  "updated_at": "2026-04-20T15:34:18.555263Z"
+}
+```
+
+## Example
+
+```bash
+curl -X PATCH https://platform-api.sophy.co/api/auth/organizations/{organization_id}/projects/{id}/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Updated Project Name"}'
+```

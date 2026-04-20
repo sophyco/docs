@@ -1,0 +1,31 @@
+---
+title: 'Delete Project'
+openapi: 'DELETE /api/organizations/{organization_id}/projects/{id}/'
+---
+
+Delete a project.
+
+<Note>
+This endpoint requires authentication with an API token (Bearer token). You can only delete projects in organizations you belong to. This action is permanent and cannot be undone.
+</Note>
+
+## Path Parameters
+
+- `organization_id` (uuid, required): Organization ID
+- `id` (uuid, required): Project ID
+
+## Response
+
+Returns a 204 No Content status code on success.
+
+## Example
+
+```bash
+curl -X DELETE https://platform-api.sophy.co/api/auth/organizations/{organization_id}/projects/{id}/ \
+  -H "Authorization: Bearer suk_..."
+```
+
+## Error Responses
+
+- `404`: Project not found
+- `403`: You don't have permission to delete this project
