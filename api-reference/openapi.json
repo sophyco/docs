@@ -214,6 +214,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedOrganizationList'
           description: ''
+  /api/organizations/{id}/:
+    get:
+      operationId: organizations_retrieve
+      description: |-
+        Organization endpoints for authenticated users.
+        Users can list and view their organization(s).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - organizations
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
   /api/organizations/{organization_id}/projects/:
     get:
       operationId: organizations_projects_list
@@ -394,31 +419,6 @@ paths:
       responses:
         '204':
           description: No response body
-  /api/organizations/{id}/:
-    get:
-      operationId: organizations_retrieve
-      description: |-
-        Organization endpoints for authenticated users.
-        Users can list and view their organization(s).
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: Organization UUID
-        required: true
-      tags:
-      - organizations
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Organization'
-          description: ''
   /api/schema/:
     get:
       operationId: schema_retrieve
