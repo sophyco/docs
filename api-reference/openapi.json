@@ -1,7 +1,9 @@
 openapi: 3.0.3
 info:
-  title: ''
-  version: 0.0.0
+  title: Sophy Communication Platform API
+  version: 1.0.0
+  description: REST API for authentication, token management, and transcript/dialogue
+    retrieval
 paths:
   /api/auth/login/:
     post:
@@ -468,3 +470,6 @@ components:
     tokenAuth:
       type: http
       scheme: bearer
+servers:
+- url: http://localhost:8000
+  description: API Server
