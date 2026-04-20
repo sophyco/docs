@@ -781,8 +781,9 @@ components:
     Login:
       type: object
       properties:
-        username:
+        email:
           type: string
+          format: email
           writeOnly: true
         password:
           type: string
@@ -795,10 +796,10 @@ components:
           additionalProperties: {}
           readOnly: true
       required:
+      - email
       - password
       - token
       - user
-      - username
     Organization:
       type: object
       properties:
