@@ -333,6 +333,8 @@ paths:
         name: project_id
         schema:
           type: string
+          format: uuid
+        description: Project ID
         required: true
       tags:
       - transcripts
@@ -356,6 +358,8 @@ paths:
         name: project_id
         schema:
           type: string
+          format: uuid
+        description: Project ID
         required: true
       tags:
       - transcripts
