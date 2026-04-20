@@ -373,12 +373,14 @@ paths:
   /api/transcripts/{project_id}/dialogues/:
     get:
       operationId: transcripts_dialogues_list
-      description: List dialogues for a project
+      description: List dialogues for a conversation
       parameters:
       - in: query
         name: conversationID
         schema:
           type: string
+        description: Conversation ID
+        required: true
       - in: query
         name: format
         schema:
