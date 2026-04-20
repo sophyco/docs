@@ -1,0 +1,90 @@
+---
+title: 'List Dialogues'
+openapi: 'GET /api/transcripts/{projectId}/dialogues/'
+---
+
+Retrieve conversation dialogues for a project with optional filtering.
+
+## Path Parameters
+
+- `projectId` (string, required): Project UUID
+
+## Query Parameters
+
+- `conversationID` (string): Filter by conversation ID
+- `sessionID` (string): Filter by session ID
+- `role` (string): Filter by role (user, assistant, human, etc.)
+- `format` (string): Filter by format (launch, request, trace, result)
+- `type` (string): Filter by type (text, image, action, etc.)
+- `status` (string): Filter by status (pending, processing, completed, cancelled)
+
+## Response
+
+Returns an array of dialogue objects.
+
+```json
+[
+  {
+    "_id": "507f191e810c19729de860ea",
+    "projectID": "uuid",
+    "conversationID": "uuid",
+    "sessionID": "string",
+    "role": "user",
+    "format": "request",
+    "type": "text",
+    "message": "Hello, how can you help me?",
+    "input": {
+      "role": "user",
+      "content": "Hello, how can you help me?"
+    },
+    "payload": {
+      "message_id": "msg-123"
+    },
+    "parent_message_id": null,
+    "proactive": false,
+    "source": null,
+    "status": "completed",
+    "startTime": "2026-04-20T09:00:00Z"
+  }
+]
+```
+
+## Filter Values
+
+### role
+- `user` - Customer/user message
+- `assistant` - AI assistant message
+- `human` - Human agent message
+- `system` - System message
+
+### status
+- `pending` - Waiting to process
+- `processing` - Currently processing
+- `completed` - Successfully completed
+- `cancelled` - Cancelled/failed
+
+### type
+- `text` - Text message
+- `image` - Image message
+- `action` - Action trigger
+- `debug` - Debug information
+
+## Examples
+
+```bash
+# Get all dialogues
+curl -X GET http://localhost:8000/api/transcripts/{projectId}/dialogues/ \
+  -H "Authorization: Bearer suk_..."
+
+# Get completed messages
+curl -X GET "http://localhost:8000/api/transcripts/{projectId}/dialogues/?status=completed" \
+  -H "Authorization: Bearer suk_..."
+
+# Get user messages only
+curl -X GET "http://localhost:8000/api/transcripts/{projectId}/dialogues/?role=user" \
+  -H "Authorization: Bearer suk_..."
+
+# Get completed user messages
+curl -X GET "http://localhost:8000/api/transcripts/{projectId}/dialogues/?role=user&status=completed" \
+  -H "Authorization: Bearer suk_..."
+```

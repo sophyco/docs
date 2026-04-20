@@ -1,0 +1,34 @@
+---
+title: 'Login'
+openapi: 'POST /api/auth/login/'
+---
+
+Login with username and password to get an API token.
+
+<Note>
+This is the only endpoint that doesn't require authentication.
+</Note>
+
+## Request Body
+
+- `username` (string, required): Username
+- `password` (string, required): Password
+
+## Response
+
+Returns user information and an API token (suk_*).
+
+```json
+{
+  "token": "suk_...",
+  "user": {
+    "id": "uuid",
+    "username": "string",
+    "email": "string",
+    "first_name": "string",
+    "last_name": "string",
+    "role": "agent|admin|owner",
+    "organization_id": "uuid"
+  }
+}
+```

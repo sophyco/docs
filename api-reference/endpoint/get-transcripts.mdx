@@ -1,0 +1,60 @@
+---
+title: 'List Transcripts'
+openapi: 'GET /api/transcripts/{projectId}/'
+---
+
+Retrieve conversation transcripts for a project with optional filtering.
+
+## Path Parameters
+
+- `projectId` (string, required): Project UUID
+
+## Query Parameters
+
+- `conversationID` (string): Filter by conversation ID
+- `sessionID` (string): Filter by session ID
+- `platform` (string): Filter by platform (whatsapp, webchat, etc.)
+- `unread` (boolean): Filter by unread status
+
+## Response
+
+Returns an array of transcript objects.
+
+```json
+[
+  {
+    "_id": "507f1f77bcf86cd799439011",
+    "projectID": "uuid",
+    "conversationID": "uuid",
+    "sessionID": "string",
+    "reportTags": ["urgent"],
+    "unread": false,
+    "platform": "whatsapp",
+    "browser": "Chrome",
+    "device": "desktop",
+    "os": "macOS",
+    "user": {
+      "name": "John Doe",
+      "image": "https://..."
+    },
+    "createdAt": "2026-04-20T09:00:00Z",
+    "updatedAt": "2026-04-20T10:00:00Z"
+  }
+]
+```
+
+## Examples
+
+```bash
+# Get all transcripts
+curl -X GET http://localhost:8000/api/transcripts/{projectId}/ \
+  -H "Authorization: Bearer suk_..."
+
+# Filter by platform
+curl -X GET "http://localhost:8000/api/transcripts/{projectId}/?platform=whatsapp" \
+  -H "Authorization: Bearer suk_..."
+
+# Filter by unread
+curl -X GET "http://localhost:8000/api/transcripts/{projectId}/?unread=true" \
+  -H "Authorization: Bearer suk_..."
+```

@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Sophy Communication Platform",
   "colors": {
-    "primary": "#16A34A",
+    "primary": "#0D9373",
     "light": "#07C983",
-    "dark": "#15803D"
+    "dark": "#0D9373"
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -57,12 +57,18 @@
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Authentication",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/endpoint/login",
+              "api-reference/endpoint/list-tokens",
+              "api-reference/endpoint/create-token"
+            ]
+          },
+          {
+            "group": "Transcripts & Dialogues",
+            "pages": [
+              "api-reference/endpoint/get-transcripts",
+              "api-reference/endpoint/get-dialogues"
             ]
           }
         ]
@@ -90,14 +96,18 @@
   "navbar": {
     "links": [
       {
+        "label": "GitHub",
+        "href": "https://github.com/sophy"
+      },
+      {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:support@sophy.co"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Platform",
+      "href": "https://platform.sophy.co"
     }
   },
   "contextual": {
@@ -114,9 +124,9 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/sophy",
+      "github": "https://github.com/sophy",
+      "linkedin": "https://linkedin.com/company/sophy"
     }
   }
 }

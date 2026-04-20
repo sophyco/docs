@@ -1,0 +1,46 @@
+---
+title: 'Create API Token'
+openapi: 'POST /api/auth/tokens/'
+---
+
+Create a new API token for the authenticated user.
+
+<Info>
+Supports both user tokens (suk_) and service account tokens (ssk_)
+</Info>
+
+## Request Body
+
+- `type` (string, required): "user" or "service"
+- `name` (string, required): Token name/description
+- `expires_at` (string, optional): ISO 8601 expiration date (null = unlimited)
+
+## Response
+
+Returns the newly created token.
+
+```json
+{
+  "id": "uuid",
+  "token": "suk_...",
+  "type": "user",
+  "name": "My Production Token",
+  "user_id": "uuid",
+  "is_active": true,
+  "expires_at": "2026-12-31T23:59:59Z",
+  "last_used_at": null,
+  "is_expired": false,
+  "is_valid": true,
+  "created_at": "2026-04-20T10:35:00Z",
+  "updated_at": "2026-04-20T10:35:00Z"
+}
+```
+
+## Token Types
+
+- **suk_** (Sophy User Key): Personal API token
+- **ssk_** (Sophy Service Key): Service account token for automation
+
+<Note>
+Copy the token value immediately. You won't be able to see it again for security reasons.
+</Note>
