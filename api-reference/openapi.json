@@ -580,6 +580,11 @@ paths:
           type: integer
         description: Max results to return (default 100, max 1000)
       - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
+      - in: query
         name: platform
         schema:
           type: string
@@ -631,6 +636,11 @@ paths:
         schema:
           type: integer
         description: Max results to return (default 100, max 1000)
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
       - in: path
         name: project_id
         schema:
@@ -746,9 +756,6 @@ components:
         input:
           type: object
           additionalProperties: {}
-        payload:
-          type: object
-          additionalProperties: {}
         parent_message_id:
           type: string
           nullable: true
@@ -769,7 +776,6 @@ components:
       - input
       - message
       - parent_message_id
-      - payload
       - proactive
       - projectID
       - role
