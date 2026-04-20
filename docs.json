@@ -52,7 +52,7 @@
         "tab": "API reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Getting Started",
             "pages": [
               "api-reference/introduction"
             ]
@@ -70,6 +70,14 @@
             "pages": [
               "api-reference/endpoint/get-transcripts",
               "api-reference/endpoint/get-dialogues"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "error-handling",
+              "code-examples",
+              "best-practices"
             ]
           }
         ]
