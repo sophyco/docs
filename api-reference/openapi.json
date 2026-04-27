@@ -111,7 +111,7 @@ paths:
       tags:
       - auth
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -139,7 +139,7 @@ paths:
               $ref: '#/components/schemas/APIToken'
         required: true
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -164,7 +164,7 @@ paths:
       tags:
       - auth
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -199,7 +199,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedAPIToken'
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -223,7 +223,7 @@ paths:
       tags:
       - auth
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '204':
           description: No response body
@@ -255,6 +255,7 @@ paths:
       tags:
       - organizations
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -280,6 +281,7 @@ paths:
       tags:
       - organizations
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -323,6 +325,7 @@ paths:
       tags:
       - organizations
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -359,6 +362,7 @@ paths:
               $ref: '#/components/schemas/Project'
         required: true
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '201':
@@ -391,6 +395,7 @@ paths:
       tags:
       - organizations
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -433,6 +438,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedProject'
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -464,6 +470,7 @@ paths:
       tags:
       - organizations
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '204':
@@ -656,6 +663,7 @@ paths:
       tags:
       - transcripts
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -698,6 +706,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedTranscript'
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -757,6 +766,7 @@ paths:
       tags:
       - transcripts
       security:
+      - jwtAuth: []
       - tokenAuth: []
       responses:
         '200':
