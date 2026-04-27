@@ -1,1697 +1,1266 @@
-{
-    "openapi": "3.0.3",
-    "info": {
-        "title": "Sophy Communication Platform API",
-        "version": "1.0.0",
-        "description": "REST API for authentication, token management, and transcript/dialogue retrieval"
-    },
-    "paths": {
-        "/api/auth/login/": {
-            "post": {
-                "operationId": "auth_login_create",
-                "description": "User login endpoint. Accepts username and password.\nReturns user info and API token for subsequent requests.",
-                "tags": [
-                    "auth"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Login"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Login"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Login"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {}
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Login"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/auth/tokens/": {
-            "get": {
-                "operationId": "auth_tokens_list",
-                "description": "API Token management for authenticated users.\nUsers can create, list, update, and delete their own tokens.",
-                "parameters": [
-                    {
-                        "name": "ordering",
-                        "required": false,
-                        "in": "query",
-                        "description": "Which field to use when ordering the results.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "required": false,
-                        "in": "query",
-                        "description": "A page number within the paginated result set.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "search",
-                        "required": false,
-                        "in": "query",
-                        "description": "A search term.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedAPITokenList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "operationId": "auth_tokens_create",
-                "description": "API Token management for authenticated users.\nUsers can create, list, update, and delete their own tokens.",
-                "tags": [
-                    "auth"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/APIToken"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/APIToken"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/APIToken"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/APIToken"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/auth/tokens/{id}/": {
-            "get": {
-                "operationId": "auth_tokens_retrieve",
-                "description": "API Token management for authenticated users.\nUsers can create, list, update, and delete their own tokens.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "A UUID string identifying this api token.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/APIToken"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "auth_tokens_partial_update",
-                "description": "API Token management for authenticated users.\nUsers can create, list, update, and delete their own tokens.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "A UUID string identifying this api token.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedAPIToken"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedAPIToken"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedAPIToken"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/APIToken"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "auth_tokens_destroy",
-                "description": "API Token management for authenticated users.\nUsers can create, list, update, and delete their own tokens.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "A UUID string identifying this api token.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No response body"
-                    }
-                }
-            }
-        },
-        "/api/organizations/": {
-            "get": {
-                "operationId": "organizations_list",
-                "description": "Organization endpoints for authenticated users.\nUsers can list and view their organization(s).",
-                "parameters": [
-                    {
-                        "name": "ordering",
-                        "required": false,
-                        "in": "query",
-                        "description": "Which field to use when ordering the results.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "required": false,
-                        "in": "query",
-                        "description": "A page number within the paginated result set.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "search",
-                        "required": false,
-                        "in": "query",
-                        "description": "A search term.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedOrganizationList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/organizations/{id}/": {
-            "get": {
-                "operationId": "organizations_retrieve",
-                "description": "Organization endpoints for authenticated users.\nUsers can list and view their organization(s).",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Organization UUID",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Organization"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/organizations/{organization_id}/projects/": {
-            "get": {
-                "operationId": "organizations_projects_list",
-                "description": "Project endpoints for managing projects within an organization.\nUsers can create, list, update, and delete projects in their organization.",
-                "parameters": [
-                    {
-                        "name": "ordering",
-                        "required": false,
-                        "in": "query",
-                        "description": "Which field to use when ordering the results.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "path",
-                        "name": "organization_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Organization UUID",
-                        "required": true
-                    },
-                    {
-                        "name": "page",
-                        "required": false,
-                        "in": "query",
-                        "description": "A page number within the paginated result set.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "search",
-                        "required": false,
-                        "in": "query",
-                        "description": "A search term.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedProjectList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "operationId": "organizations_projects_create",
-                "description": "Project endpoints for managing projects within an organization.\nUsers can create, list, update, and delete projects in their organization.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "organization_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Organization UUID",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Project"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Project"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Project"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Project"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/organizations/{organization_id}/projects/{id}/": {
-            "get": {
-                "operationId": "organizations_projects_retrieve",
-                "description": "Project endpoints for managing projects within an organization.\nUsers can create, list, update, and delete projects in their organization.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Project UUID",
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "organization_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Organization UUID",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Project"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "organizations_projects_partial_update",
-                "description": "Project endpoints for managing projects within an organization.\nUsers can create, list, update, and delete projects in their organization.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Project UUID",
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "organization_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Organization UUID",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedProject"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedProject"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedProject"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Project"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "organizations_projects_destroy",
-                "description": "Project endpoints for managing projects within an organization.\nUsers can create, list, update, and delete projects in their organization.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Project UUID",
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "organization_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Organization UUID",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No response body"
-                    }
-                }
-            }
-        },
-        "/api/schema/": {
-            "get": {
-                "operationId": "schema_retrieve",
-                "description": "OpenApi3 schema for this API. Format can be selected via content negotiation.\n\n- YAML: application/vnd.oai.openapi\n- JSON: application/vnd.oai.openapi+json",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "format",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "json",
-                                "yaml"
-                            ]
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "lang",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "af",
-                                "ar",
-                                "ar-dz",
-                                "ast",
-                                "az",
-                                "be",
-                                "bg",
-                                "bn",
-                                "br",
-                                "bs",
-                                "ca",
-                                "ckb",
-                                "cs",
-                                "cy",
-                                "da",
-                                "de",
-                                "dsb",
-                                "el",
-                                "en",
-                                "en-au",
-                                "en-gb",
-                                "eo",
-                                "es",
-                                "es-ar",
-                                "es-co",
-                                "es-mx",
-                                "es-ni",
-                                "es-ve",
-                                "et",
-                                "eu",
-                                "fa",
-                                "fi",
-                                "fr",
-                                "fy",
-                                "ga",
-                                "gd",
-                                "gl",
-                                "he",
-                                "hi",
-                                "hr",
-                                "hsb",
-                                "ht",
-                                "hu",
-                                "hy",
-                                "ia",
-                                "id",
-                                "ig",
-                                "io",
-                                "is",
-                                "it",
-                                "ja",
-                                "ka",
-                                "kab",
-                                "kk",
-                                "km",
-                                "kn",
-                                "ko",
-                                "ky",
-                                "lb",
-                                "lt",
-                                "lv",
-                                "mk",
-                                "ml",
-                                "mn",
-                                "mr",
-                                "ms",
-                                "my",
-                                "nb",
-                                "ne",
-                                "nl",
-                                "nn",
-                                "os",
-                                "pa",
-                                "pl",
-                                "pt",
-                                "pt-br",
-                                "ro",
-                                "ru",
-                                "sk",
-                                "sl",
-                                "sq",
-                                "sr",
-                                "sr-latn",
-                                "sv",
-                                "sw",
-                                "ta",
-                                "te",
-                                "tg",
-                                "th",
-                                "tk",
-                                "tr",
-                                "tt",
-                                "udm",
-                                "ug",
-                                "uk",
-                                "ur",
-                                "uz",
-                                "vi",
-                                "zh-hans",
-                                "zh-hant"
-                            ]
-                        }
-                    }
-                ],
-                "tags": [
-                    "schema"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    },
-                    {}
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/vnd.oai.openapi": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                }
-                            },
-                            "application/yaml": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                }
-                            },
-                            "application/vnd.oai.openapi+json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/transcripts/{project_id}/": {
-            "get": {
-                "operationId": "transcripts_list",
-                "description": "List transcripts for a project",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "conversationID",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "limit",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "Max results to return (default 100, max 1000)"
-                    },
-                    {
-                        "in": "query",
-                        "name": "offset",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "Number of items to skip (default 0)"
-                    },
-                    {
-                        "in": "query",
-                        "name": "platform",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "path",
-                        "name": "project_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Project ID",
-                        "required": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "sessionID",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "unread",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    }
-                ],
-                "tags": [
-                    "transcripts"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/PaginatedTranscriptList"
-                                    }
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/transcripts/{project_id}/{transcript_id}/read/": {
-            "patch": {
-                "operationId": "transcripts_read_partial_update",
-                "description": "Mark a transcript as read for the current user",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "project_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Project ID",
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "transcript_id",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "Transcript ID",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "transcripts"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedTranscript"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedTranscript"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedTranscript"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Transcript"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/transcripts/{project_id}/dialogues/": {
-            "get": {
-                "operationId": "transcripts_dialogues_list",
-                "description": "List dialogues for a conversation",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "conversationID",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "Conversation ID",
-                        "required": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "format",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "limit",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "Max results to return (default 100, max 1000)"
-                    },
-                    {
-                        "in": "query",
-                        "name": "offset",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "Number of items to skip (default 0)"
-                    },
-                    {
-                        "in": "path",
-                        "name": "project_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "Project ID",
-                        "required": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "role",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "sessionID",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "status",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "type",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "tags": [
-                    "transcripts"
-                ],
-                "security": [
-                    {
-                        "tokenAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/PaginatedDialogueList"
-                                    }
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        }
-    },
-    "components": {
-        "schemas": {
-            "APIToken": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
-                    },
-                    "token": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "type": {
-                        "$ref": "#/components/schemas/TypeEnum"
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "Token name/description",
-                        "maxLength": 255
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "is_active": {
-                        "type": "boolean"
-                    },
-                    "expires_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true,
-                        "description": "Token expiration date. Leave blank for unlimited."
-                    },
-                    "last_used_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true
-                    },
-                    "is_expired": {
-                        "type": "boolean",
-                        "readOnly": true
-                    },
-                    "is_valid": {
-                        "type": "boolean",
-                        "readOnly": true
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "created_at",
-                    "id",
-                    "is_expired",
-                    "is_valid",
-                    "name",
-                    "token",
-                    "updated_at",
-                    "user_id"
-                ]
-            },
-            "Dialogue": {
-                "type": "object",
-                "properties": {
-                    "_id": {
-                        "type": "string",
-                        "title": " id"
-                    },
-                    "projectID": {
-                        "type": "string"
-                    },
-                    "conversationID": {
-                        "type": "string"
-                    },
-                    "sessionID": {
-                        "type": "string"
-                    },
-                    "role": {
-                        "type": "string"
-                    },
-                    "format": {
-                        "type": "string"
-                    },
-                    "type": {
-                        "type": "string"
-                    },
-                    "message": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "input": {
-                        "type": "object",
-                        "additionalProperties": {}
-                    },
-                    "parent_message_id": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "proactive": {
-                        "type": "boolean"
-                    },
-                    "source": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "status": {
-                        "type": "string"
-                    },
-                    "startTime": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "_id",
-                    "conversationID",
-                    "format",
-                    "input",
-                    "message",
-                    "parent_message_id",
-                    "proactive",
-                    "projectID",
-                    "role",
-                    "sessionID",
-                    "source",
-                    "startTime",
-                    "status",
-                    "type"
-                ]
-            },
-            "Login": {
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "format": "email",
-                        "writeOnly": true
-                    },
-                    "password": {
-                        "type": "string",
-                        "writeOnly": true
-                    },
-                    "token": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "user": {
-                        "type": "object",
-                        "additionalProperties": {},
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "email",
-                    "password",
-                    "token",
-                    "user"
-                ]
-            },
-            "Organization": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
-                    },
-                    "name": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true
-                    },
-                    "project_count": {
-                        "type": "integer",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "created_at",
-                    "id",
-                    "name",
-                    "project_count"
-                ]
-            },
-            "PaginatedAPITokenList": {
-                "type": "object",
-                "required": [
-                    "count",
-                    "results"
-                ],
-                "properties": {
-                    "count": {
-                        "type": "integer",
-                        "example": 123
-                    },
-                    "next": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=4"
-                    },
-                    "previous": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=2"
-                    },
-                    "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/APIToken"
-                        }
-                    }
-                }
-            },
-            "PaginatedDialogueList": {
-                "type": "object",
-                "properties": {
-                    "count": {
-                        "type": "integer"
-                    },
-                    "offset": {
-                        "type": "integer"
-                    },
-                    "limit": {
-                        "type": "integer"
-                    },
-                    "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Dialogue"
-                        }
-                    }
-                },
-                "required": [
-                    "count",
-                    "limit",
-                    "offset",
-                    "results"
-                ]
-            },
-            "PaginatedOrganizationList": {
-                "type": "object",
-                "required": [
-                    "count",
-                    "results"
-                ],
-                "properties": {
-                    "count": {
-                        "type": "integer",
-                        "example": 123
-                    },
-                    "next": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=4"
-                    },
-                    "previous": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=2"
-                    },
-                    "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Organization"
-                        }
-                    }
-                }
-            },
-            "PaginatedProjectList": {
-                "type": "object",
-                "required": [
-                    "count",
-                    "results"
-                ],
-                "properties": {
-                    "count": {
-                        "type": "integer",
-                        "example": 123
-                    },
-                    "next": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=4"
-                    },
-                    "previous": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=2"
-                    },
-                    "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Project"
-                        }
-                    }
-                }
-            },
-            "PaginatedTranscriptList": {
-                "type": "object",
-                "properties": {
-                    "count": {
-                        "type": "integer"
-                    },
-                    "offset": {
-                        "type": "integer"
-                    },
-                    "limit": {
-                        "type": "integer"
-                    },
-                    "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Transcript"
-                        }
-                    }
-                },
-                "required": [
-                    "count",
-                    "limit",
-                    "offset",
-                    "results"
-                ]
-            },
-            "PatchedAPIToken": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
-                    },
-                    "token": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "type": {
-                        "$ref": "#/components/schemas/TypeEnum"
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "Token name/description",
-                        "maxLength": 255
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "is_active": {
-                        "type": "boolean"
-                    },
-                    "expires_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true,
-                        "description": "Token expiration date. Leave blank for unlimited."
-                    },
-                    "last_used_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true
-                    },
-                    "is_expired": {
-                        "type": "boolean",
-                        "readOnly": true
-                    },
-                    "is_valid": {
-                        "type": "boolean",
-                        "readOnly": true
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true
-                    }
-                }
-            },
-            "PatchedProject": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
-                    },
-                    "organization_id": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "organization_name": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "name": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true
-                    }
-                }
-            },
-            "PatchedTranscript": {
-                "type": "object",
-                "properties": {
-                    "_id": {
-                        "type": "string",
-                        "title": " id"
-                    },
-                    "projectID": {
-                        "type": "string"
-                    },
-                    "conversationID": {
-                        "type": "string"
-                    },
-                    "sessionID": {
-                        "type": "string"
-                    },
-                    "reportTags": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "unread": {
-                        "type": "boolean",
-                        "readOnly": true
-                    },
-                    "platform": {
-                        "type": "string"
-                    },
-                    "browser": {
-                        "type": "string"
-                    },
-                    "device": {
-                        "type": "string"
-                    },
-                    "os": {
-                        "type": "string"
-                    },
-                    "user": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/TranscriptUser"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updatedAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                }
-            },
-            "Project": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
-                    },
-                    "organization_id": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "organization_name": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "name": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "created_at",
-                    "id",
-                    "name",
-                    "organization_id",
-                    "organization_name",
-                    "updated_at"
-                ]
-            },
-            "Transcript": {
-                "type": "object",
-                "properties": {
-                    "_id": {
-                        "type": "string",
-                        "title": " id"
-                    },
-                    "projectID": {
-                        "type": "string"
-                    },
-                    "conversationID": {
-                        "type": "string"
-                    },
-                    "sessionID": {
-                        "type": "string"
-                    },
-                    "reportTags": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "unread": {
-                        "type": "boolean",
-                        "readOnly": true
-                    },
-                    "platform": {
-                        "type": "string"
-                    },
-                    "browser": {
-                        "type": "string"
-                    },
-                    "device": {
-                        "type": "string"
-                    },
-                    "os": {
-                        "type": "string"
-                    },
-                    "user": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/TranscriptUser"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updatedAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "_id",
-                    "browser",
-                    "conversationID",
-                    "createdAt",
-                    "device",
-                    "os",
-                    "platform",
-                    "projectID",
-                    "reportTags",
-                    "sessionID",
-                    "unread",
-                    "updatedAt",
-                    "user"
-                ]
-            },
-            "TranscriptUser": {
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "image": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "image",
-                    "name"
-                ]
-            },
-            "TypeEnum": {
-                "enum": [
-                    "user",
-                    "service"
-                ],
-                "type": "string",
-                "description": "* `user` - User Token\n* `service` - Service Account Token"
-            }
-        },
-        "securitySchemes": {
-            "tokenAuth": {
-                "type": "http",
-                "scheme": "bearer"
-            }
-        }
-    },
-    "servers": [
-        {
-            "url": "https://platform-api.sophy.co",
-            "description": "API Server"
-        }
-    ]
-}
+openapi: 3.0.3
+info:
+  title: Sophy Communication Platform API
+  version: 1.0.0
+  description: REST API for authentication, token management, and transcript/dialogue
+    retrieval
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: User login endpoint. Returns JWT access + refresh tokens.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: Blacklists the refresh token, invalidating the session.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: Returns a new access token given a valid refresh token.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+          description: ''
+  /api/auth/tokens/:
+    get:
+      operationId: auth_tokens_list
+      description: |-
+        API Token management for authenticated users.
+        Users can create, list, update, and delete their own tokens.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - auth
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAPITokenList'
+          description: ''
+    post:
+      operationId: auth_tokens_create
+      description: |-
+        API Token management for authenticated users.
+        Users can create, list, update, and delete their own tokens.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/APIToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/APIToken'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIToken'
+          description: ''
+  /api/auth/tokens/{id}/:
+    get:
+      operationId: auth_tokens_retrieve
+      description: |-
+        API Token management for authenticated users.
+        Users can create, list, update, and delete their own tokens.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this api token.
+        required: true
+      tags:
+      - auth
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIToken'
+          description: ''
+    patch:
+      operationId: auth_tokens_partial_update
+      description: |-
+        API Token management for authenticated users.
+        Users can create, list, update, and delete their own tokens.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this api token.
+        required: true
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAPIToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAPIToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAPIToken'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIToken'
+          description: ''
+    delete:
+      operationId: auth_tokens_destroy
+      description: |-
+        API Token management for authenticated users.
+        Users can create, list, update, and delete their own tokens.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this api token.
+        required: true
+      tags:
+      - auth
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/organizations/:
+    get:
+      operationId: organizations_list
+      description: |-
+        Organization endpoints for authenticated users.
+        Users can list and view their organization(s).
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - organizations
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganizationList'
+          description: ''
+  /api/organizations/{id}/:
+    get:
+      operationId: organizations_retrieve
+      description: |-
+        Organization endpoints for authenticated users.
+        Users can list and view their organization(s).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - organizations
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/organizations/{organization_id}/projects/:
+    get:
+      operationId: organizations_projects_list
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - organizations
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectList'
+          description: ''
+    post:
+      operationId: organizations_projects_create
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Project'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Project'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/organizations/{organization_id}/projects/{id}/:
+    get:
+      operationId: organizations_projects_retrieve
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - organizations
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    patch:
+      operationId: organizations_projects_partial_update
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    delete:
+      operationId: organizations_projects_destroy
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - organizations
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - ht
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/transcripts/{project_id}/:
+    get:
+      operationId: transcripts_list
+      description: List transcripts for a project
+      parameters:
+      - in: query
+        name: conversationID
+        schema:
+          type: string
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
+      - in: query
+        name: platform
+        schema:
+          type: string
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project ID
+        required: true
+      - in: query
+        name: sessionID
+        schema:
+          type: string
+      - in: query
+        name: unread
+        schema:
+          type: boolean
+      tags:
+      - transcripts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaginatedTranscriptList'
+          description: ''
+  /api/transcripts/{project_id}/{transcript_id}/read/:
+    patch:
+      operationId: transcripts_read_partial_update
+      description: Mark a transcript as read for the current user
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project ID
+        required: true
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        description: Transcript ID
+        required: true
+      tags:
+      - transcripts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transcript'
+          description: ''
+  /api/transcripts/{project_id}/dialogues/:
+    get:
+      operationId: transcripts_dialogues_list
+      description: List dialogues for a conversation
+      parameters:
+      - in: query
+        name: conversationID
+        schema:
+          type: string
+        description: Conversation ID
+        required: true
+      - in: query
+        name: format
+        schema:
+          type: string
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project ID
+        required: true
+      - in: query
+        name: role
+        schema:
+          type: string
+      - in: query
+        name: sessionID
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+      - in: query
+        name: type
+        schema:
+          type: string
+      tags:
+      - transcripts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaginatedDialogueList'
+          description: ''
+components:
+  schemas:
+    APIToken:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        token:
+          type: string
+          readOnly: true
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        name:
+          type: string
+          description: Token name/description
+          maxLength: 255
+        user_id:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Token expiration date. Leave blank for unlimited.
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_expired:
+          type: boolean
+          readOnly: true
+        is_valid:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - is_expired
+      - is_valid
+      - name
+      - token
+      - updated_at
+      - user_id
+    Dialogue:
+      type: object
+      properties:
+        _id:
+          type: string
+          title: ' id'
+        projectID:
+          type: string
+        conversationID:
+          type: string
+        sessionID:
+          type: string
+        role:
+          type: string
+        format:
+          type: string
+        type:
+          type: string
+        message:
+          type: string
+          nullable: true
+        input:
+          type: object
+          additionalProperties: {}
+        parent_message_id:
+          type: string
+          nullable: true
+        proactive:
+          type: boolean
+        source:
+          type: string
+          nullable: true
+        status:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+      required:
+      - _id
+      - conversationID
+      - format
+      - input
+      - message
+      - parent_message_id
+      - proactive
+      - projectID
+      - role
+      - sessionID
+      - source
+      - startTime
+      - status
+      - type
+    Login:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access_token:
+          type: string
+          readOnly: true
+        refresh_token:
+          type: string
+          readOnly: true
+        user:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+      required:
+      - access_token
+      - email
+      - password
+      - refresh_token
+      - user
+    LogoutRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+      required:
+      - refresh_token
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        project_count:
+          type: integer
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - project_count
+    PaginatedAPITokenList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIToken'
+    PaginatedDialogueList:
+      type: object
+      properties:
+        count:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dialogue'
+      required:
+      - count
+      - limit
+      - offset
+      - results
+    PaginatedOrganizationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+    PaginatedProjectList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+    PaginatedTranscriptList:
+      type: object
+      properties:
+        count:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transcript'
+      required:
+      - count
+      - limit
+      - offset
+      - results
+    PatchedAPIToken:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        token:
+          type: string
+          readOnly: true
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        name:
+          type: string
+          description: Token name/description
+          maxLength: 255
+        user_id:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Token expiration date. Leave blank for unlimited.
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_expired:
+          type: boolean
+          readOnly: true
+        is_valid:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedProject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          readOnly: true
+        organization_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedTranscript:
+      type: object
+      properties:
+        _id:
+          type: string
+          title: ' id'
+        projectID:
+          type: string
+        conversationID:
+          type: string
+        sessionID:
+          type: string
+        reportTags:
+          type: array
+          items:
+            type: string
+        unread:
+          type: boolean
+          readOnly: true
+        platform:
+          type: string
+        browser:
+          type: string
+        device:
+          type: string
+        os:
+          type: string
+        user:
+          allOf:
+          - $ref: '#/components/schemas/TranscriptUser'
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          readOnly: true
+        organization_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - organization_id
+      - organization_name
+      - updated_at
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+      required:
+      - refresh_token
+    RefreshTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+      required:
+      - access_token
+    Transcript:
+      type: object
+      properties:
+        _id:
+          type: string
+          title: ' id'
+        projectID:
+          type: string
+        conversationID:
+          type: string
+        sessionID:
+          type: string
+        reportTags:
+          type: array
+          items:
+            type: string
+        unread:
+          type: boolean
+          readOnly: true
+        platform:
+          type: string
+        browser:
+          type: string
+        device:
+          type: string
+        os:
+          type: string
+        user:
+          allOf:
+          - $ref: '#/components/schemas/TranscriptUser'
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - _id
+      - browser
+      - conversationID
+      - createdAt
+      - device
+      - os
+      - platform
+      - projectID
+      - reportTags
+      - sessionID
+      - unread
+      - updatedAt
+      - user
+    TranscriptUser:
+      type: object
+      properties:
+        name:
+          type: string
+        image:
+          type: string
+      required:
+      - image
+      - name
+    TypeEnum:
+      enum:
+      - user
+      - service
+      type: string
+      description: |-
+        * `user` - User Token
+        * `service` - Service Account Token
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    tokenAuth:
+      type: http
+      scheme: bearer
+servers:
+- url: https://platform-api.sophy.co
+  description: API Server
