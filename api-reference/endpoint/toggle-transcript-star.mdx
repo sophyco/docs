@@ -1,0 +1,47 @@
+---
+title: 'Toggle Transcript Star'
+openapi: 'patch /api/transcripts/{project_id}/{transcript_id}/star/'
+---
+
+Toggle the star (favourite) status of a transcript for the authenticated user. Each user has their own independent star list — starring a transcript does not affect other users.
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+- `transcript_id` (string, required): Transcript ID
+
+## Response
+
+Returns the updated transcript object with the new `starred` value for the current user.
+
+```json
+{
+  "_id": "507f1f77bcf86cd799439011",
+  "projectID": "uuid",
+  "conversationID": "uuid",
+  "sessionID": "string",
+  "reportTags": [],
+  "unread": false,
+  "starred": true,
+  "labels": ["VIP"],
+  "platform": "whatsapp",
+  "user": {
+    "name": "John Doe",
+    "image": "https://..."
+  },
+  "createdAt": "2026-04-20T09:00:00Z",
+  "updatedAt": "2026-04-20T10:00:00Z"
+}
+```
+
+## Notes
+
+- This endpoint is a toggle: calling it once stars the transcript, calling it again unstars it.
+- To list only starred transcripts for the current user, use `GET /api/transcripts/{project_id}/?starred=true`.
+
+## Example
+
+```bash
+curl -X PATCH https://platform-api.sophy.co/api/transcripts/{project_id}/{transcript_id}/star/ \
+  -H "Authorization: Bearer suk_..."
+```

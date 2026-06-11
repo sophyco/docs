@@ -87,6 +87,9 @@
             "pages": [
               "api-reference/endpoint/get-transcripts",
               "api-reference/endpoint/mark-transcript-read",
+              "api-reference/endpoint/toggle-transcript-star",
+              "api-reference/endpoint/set-transcript-labels",
+              "api-reference/endpoint/list-transcript-labels",
               "api-reference/endpoint/get-dialogues"
             ]
           },
