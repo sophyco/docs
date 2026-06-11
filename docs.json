@@ -61,8 +61,13 @@
             "group": "Authentication",
             "pages": [
               "api-reference/endpoint/login",
+              "api-reference/endpoint/logout",
+              "api-reference/endpoint/refresh-token",
               "api-reference/endpoint/list-tokens",
-              "api-reference/endpoint/create-token"
+              "api-reference/endpoint/create-token",
+              "api-reference/endpoint/get-token",
+              "api-reference/endpoint/update-token",
+              "api-reference/endpoint/delete-token"
             ]
           },
           {
