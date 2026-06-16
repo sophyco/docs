@@ -255,8 +255,8 @@ paths:
       tags:
       - organizations
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -281,8 +281,8 @@ paths:
       tags:
       - organizations
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -325,8 +325,8 @@ paths:
       tags:
       - organizations
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -362,8 +362,8 @@ paths:
               $ref: '#/components/schemas/Project'
         required: true
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -395,8 +395,8 @@ paths:
       tags:
       - organizations
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -438,8 +438,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedProject'
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -470,8 +470,8 @@ paths:
       tags:
       - organizations
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '204':
           description: No response body
@@ -673,8 +673,8 @@ paths:
       tags:
       - transcripts
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -716,8 +716,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedSetLabelsRequest'
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -757,8 +757,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedTranscript'
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -798,8 +798,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedTranscript'
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -858,8 +858,8 @@ paths:
       tags:
       - transcripts
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -884,8 +884,8 @@ paths:
       tags:
       - transcripts
       security:
-      - jwtAuth: []
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
