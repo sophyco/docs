@@ -227,6 +227,164 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/billing/callback/{gateway}/:
+    post:
+      operationId: billing_callback_create
+      parameters:
+      - in: path
+        name: gateway
+        schema:
+          type: string
+        description: Payment gateway name (e.g. paytr)
+        required: true
+      tags:
+      - Billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewayCallback'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GatewayCallback'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GatewayCallback'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/billing/payments/{id}/:
+    get:
+      operationId: billing_payments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Payment ID (UUID)
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/billing/payments/{id}/profile/:
+    get:
+      operationId: billing_payments_profile_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingProfile'
+          description: ''
+    post:
+      operationId: billing_payments_profile_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BillingProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BillingProfile'
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingProfile'
+          description: ''
+  /api/billing/payments/{id}/token/{gateway}/:
+    post:
+      operationId: billing_payments_token_create
+      parameters:
+      - in: path
+        name: gateway
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/billing/payments/{session_id}/session/:
+    get:
+      operationId: billing_payments_session_retrieve
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+        description: Payment session ID (e.g. SPUU4V61XFW3)
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
   /api/organizations/:
     get:
       operationId: organizations_list
@@ -893,6 +1051,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/LabelList'
           description: ''
+  /api/workflows/recordings/{filename}/:
+    get:
+      operationId: workflows_recordings_retrieve
+      description: |-
+        Provider-independent, permanent recording link. The email link points here;
+        on click we mint a fresh short-lived signed URL for the private S3 object
+        (key reconstructed from the self-contained filename) and 302-redirect.
+
+        Public by design — security is the unguessable filename (contains the VAPI
+        call UUID). Used when a workflow's recording.link_from is the S3 destination.
+      parameters:
+      - in: path
+        name: filename
+        schema:
+          type: string
+        description: Self-contained recording filename ({call_id}_{ts}_{assistant_id}_{type}.wav)
+        required: true
+      tags:
+      - workflows
+      security:
+      - {}
+      responses:
+        '302':
+          description: No response body
+        '404':
+          description: No response body
 components:
   schemas:
     APIToken:
@@ -948,6 +1132,42 @@ components:
       - token
       - updated_at
       - user_id
+    AccountTypeEnum:
+      enum:
+      - individual
+      - business
+      type: string
+      description: |-
+        * `individual` - Individual
+        * `business` - Business
+    BillingProfile:
+      type: object
+      properties:
+        account_type:
+          $ref: '#/components/schemas/AccountTypeEnum'
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        company_name:
+          type: string
+          maxLength: 255
+        tax_id:
+          type: string
+          maxLength: 20
+        phone:
+          type: string
+          maxLength: 30
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        address: {}
+        po_number:
+          type: string
+          maxLength: 100
     Dialogue:
       type: object
       properties:
@@ -1000,6 +1220,29 @@ components:
       - startTime
       - status
       - type
+    GatewayCallback:
+      type: object
+      properties:
+        merchant_oid:
+          type: string
+        status:
+          type: string
+      required:
+      - merchant_oid
+      - status
+    GatewayEnum:
+      enum:
+      - paytr
+      type: string
+      description: '* `paytr` - PayTR'
+    KindEnum:
+      enum:
+      - initial
+      - recurring
+      type: string
+      description: |-
+        * `initial` - Initial
+        * `recurring` - Recurring
     LabelList:
       type: object
       properties:
@@ -1288,6 +1531,66 @@ components:
         updatedAt:
           type: string
           format: date-time
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_name:
+          type: string
+          readOnly: true
+        gateway:
+          $ref: '#/components/schemas/GatewayEnum'
+        amount_cents:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        currency:
+          type: string
+          maxLength: 10
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        items:
+          description: "\n        Each item:\n        - name: str\n        - kind:
+            one-time | recurring\n        - quantity: int\n        - unit_price_cents:
+            int (USD source or display currency)\n        - amount_cents: int (unit_price_cents
+            * quantity)\n        - currency: str (display only)\n        "
+        metadata:
+          description: |-
+            Payment metadata (copied from SubscriptionPlan.metadata on recurring charges).
+            - 'fx': {'from': str, 'to': str, 'rate': float, 'subtotal': int (cents)}
+                Present when pricing.base_type == 'rate_based'.
+            - 'pricing': {
+                'base_type': 'fixed_bundle' | 'rate_based'
+                'discount_type': 'none' | 'flat' | 'percentage'
+                'discount_cents': int (cents) — source for 'flat'; computed result for 'percentage'
+                'discount_percentage': int — only when discount_type == 'percentage'
+                'final_amount': int (cents) — equals amount_cents
+                'tax_rate': int (percentage, e.g., 20)
+            }
+        gateway_response: {}
+        gateway_events: {}
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        is_expired:
+          type: boolean
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - is_expired
+      - organization_name
     Project:
       type: object
       properties:
@@ -1333,6 +1636,18 @@ components:
           type: string
       required:
       - access_token
+    StatusEnum:
+      enum:
+      - pending
+      - success
+      - failed
+      - expired
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `success` - Success
+        * `failed` - Failed
+        * `expired` - Expired
     Transcript:
       type: object
       properties:
