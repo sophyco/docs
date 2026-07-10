@@ -385,6 +385,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/Payment'
           description: ''
+  /api/communication/v1/channels/{channel_id}/messages/:
+    post:
+      operationId: communication_v1_channels_messages_create
+      description: |-
+        Proactive send via a channel directly — resolves or creates the
+        conversation for the given recipient (e.g. a voice agent notifying a
+        customer without a prior inbound message).
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: string
+          format: uuid
+        description: Channel UUID
+        required: true
+      tags:
+      - communication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelOutboundMessage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChannelOutboundMessage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChannelOutboundMessage'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
+  /api/communication/v1/conversations/{conversation_id}/messages/:
+    post:
+      operationId: communication_v1_conversations_messages_create
+      description: |-
+        Reply within an existing conversation — the channel and recipient are
+        implied by the conversation, the same way an AI agent replies.
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: string
+          format: uuid
+        description: Conversation UUID
+        required: true
+      tags:
+      - communication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationOutboundMessage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConversationOutboundMessage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConversationOutboundMessage'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
   /api/organizations/:
     get:
       operationId: organizations_list
@@ -1090,7 +1179,7 @@ components:
           type: string
           readOnly: true
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/APITokenTypeEnum'
         name:
           type: string
           description: Token name/description
@@ -1132,6 +1221,14 @@ components:
       - token
       - updated_at
       - user_id
+    APITokenTypeEnum:
+      enum:
+      - user
+      - service
+      type: string
+      description: |-
+        * `user` - User Token
+        * `service` - Service Account Token
     AccountTypeEnum:
       enum:
       - individual
@@ -1168,6 +1265,48 @@ components:
         po_number:
           type: string
           maxLength: 100
+    ChannelOutboundMessage:
+      type: object
+      description: Proactive send via a channel — recipient given explicitly.
+      properties:
+        type:
+          $ref: '#/components/schemas/TypeDffEnum'
+        content:
+          type: string
+        caption:
+          type: string
+        template_name:
+          type: string
+        language:
+          type: string
+        variables: {}
+        client_message_id:
+          type: string
+        to:
+          type: string
+          description: Recipient phone number (E.164 recommended).
+      required:
+      - to
+      - type
+    ConversationOutboundMessage:
+      type: object
+      description: Reply within an existing conversation — channel/recipient are implied.
+      properties:
+        type:
+          $ref: '#/components/schemas/TypeDffEnum'
+        content:
+          type: string
+        caption:
+          type: string
+        template_name:
+          type: string
+        language:
+          type: string
+        variables: {}
+        client_message_id:
+          type: string
+      required:
+      - type
     Dialogue:
       type: object
       properties:
@@ -1307,6 +1446,22 @@ components:
       - id
       - name
       - project_count
+    OutboundMessageResult:
+      type: object
+      properties:
+        conversation_id:
+          type: string
+        message_id:
+          type: string
+          nullable: true
+        success:
+          type: boolean
+        raw: {}
+        deduplicated:
+          type: boolean
+      required:
+      - conversation_id
+      - success
     PaginatedAPITokenList:
       type: object
       required:
@@ -1423,7 +1578,7 @@ components:
           type: string
           readOnly: true
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/APITokenTypeEnum'
         name:
           type: string
           description: Token name/description
@@ -1533,6 +1688,14 @@ components:
           format: date-time
     Payment:
       type: object
+      description: |-
+        Public checkout payload. Both views using it are AllowAny with no auth.
+
+        gateway_response/gateway_events are deliberately absent: they carry the raw
+        PayTR payload (hash, merchant_oid, webhook history) and merchant-side error
+        text. Failures surface through failure_code/failure_message instead. metadata
+        is projected through explicit nested serializers so a new internal key added
+        to it never leaks.
       properties:
         id:
           type: string
@@ -1560,21 +1723,24 @@ components:
             one-time | recurring\n        - quantity: int\n        - unit_price_cents:
             int (USD source or display currency)\n        - amount_cents: int (unit_price_cents
             * quantity)\n        - currency: str (display only)\n        "
-        metadata:
-          description: |-
-            Payment metadata (copied from SubscriptionPlan.metadata on recurring charges).
-            - 'fx': {'from': str, 'to': str, 'rate': float, 'subtotal': int (cents)}
-                Present when pricing.base_type == 'rate_based'.
-            - 'pricing': {
-                'base_type': 'fixed_bundle' | 'rate_based'
-                'discount_type': 'none' | 'flat' | 'percentage'
-                'discount_cents': int (cents) — source for 'flat'; computed result for 'percentage'
-                'discount_percentage': int — only when discount_type == 'percentage'
-                'final_amount': int (cents) — equals amount_cents
-                'tax_rate': int (percentage, e.g., 20)
-            }
-        gateway_response: {}
-        gateway_events: {}
+        pricing:
+          allOf:
+          - $ref: '#/components/schemas/PaymentPricing'
+          nullable: true
+          readOnly: true
+        fx:
+          allOf:
+          - $ref: '#/components/schemas/PaymentFx'
+          nullable: true
+          readOnly: true
+        failure_code:
+          type: string
+          nullable: true
+          readOnly: true
+        failure_message:
+          type: string
+          nullable: true
+          readOnly: true
         expires_at:
           type: string
           format: date-time
@@ -1588,9 +1754,49 @@ components:
           readOnly: true
       required:
       - created_at
+      - failure_code
+      - failure_message
+      - fx
       - id
       - is_expired
       - organization_name
+      - pricing
+    PaymentFx:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        rate:
+          type: number
+          format: double
+        subtotal:
+          type: integer
+    PaymentPricing:
+      type: object
+      description: |-
+        The pricing breakdown a checkout page renders. See Payment.metadata help_text.
+
+        Every field is optional: metadata is written by management commands with no
+        schema, and older rows predate some keys.
+      properties:
+        base_type:
+          type: string
+        discount_type:
+          type: string
+        discount_cents:
+          type: integer
+        discount_percentage:
+          type: integer
+        tax_rate:
+          type: integer
+        net_amount_cents:
+          type: integer
+        tax_amount_cents:
+          type: integer
+        final_amount:
+          type: integer
     Project:
       type: object
       properties:
@@ -1718,14 +1924,18 @@ components:
       required:
       - image
       - name
-    TypeEnum:
+    TypeDffEnum:
       enum:
-      - user
-      - service
+      - text
+      - image
+      - document
+      - template
       type: string
       description: |-
-        * `user` - User Token
-        * `service` - Service Account Token
+        * `text` - text
+        * `image` - image
+        * `document` - document
+        * `template` - template
   securitySchemes:
     jwtAuth:
       type: http
