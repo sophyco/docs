@@ -385,6 +385,130 @@ paths:
               schema:
                 $ref: '#/components/schemas/Payment'
           description: ''
+  /api/campaigns/{project_id}/:
+    get:
+      operationId: campaigns_list
+      description: List campaigns in a project.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - campaigns
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Campaign'
+          description: ''
+  /api/campaigns/{project_id}/{campaign_id}/:
+    get:
+      operationId: campaigns_retrieve
+      description: Retrieve a single campaign.
+      parameters:
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - campaigns
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+          description: ''
+  /api/campaigns/{project_id}/{campaign_id}/preview/:
+    post:
+      operationId: campaigns_preview_create
+      description: 'Dry-run: who would be dialed, with which vars. Nothing is dispatched.'
+      parameters:
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      - in: query
+        name: sync
+        schema:
+          type: boolean
+        description: Re-sync the pivot first (default true).
+      tags:
+      - campaigns
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignPreview'
+          description: ''
+  /api/campaigns/{project_id}/{campaign_id}/sync/:
+    post:
+      operationId: campaigns_sync_create
+      description: Run contact_source → pivot sync (persists the pivot; no dialing).
+      parameters:
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - campaigns
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignSyncResult'
+          description: ''
   /api/communication/v1/channels/{channel_id}/messages/:
     post:
       operationId: communication_v1_channels_messages_create
@@ -1265,6 +1389,137 @@ components:
         po_number:
           type: string
           maxLength: 100
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          readOnly: true
+        medium:
+          allOf:
+          - $ref: '#/components/schemas/MediumEnum'
+          readOnly: true
+        message_purpose:
+          allOf:
+          - $ref: '#/components/schemas/MessagePurposeEnum'
+          readOnly: true
+        channel:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Line + credentials + concurrency quota.
+        agent:
+          type: integer
+          readOnly: true
+          description: Chosen at campaign creation; the campaign carries the agent.
+        contact_source_workflow:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          description: contact_source workflow that syncs the CampaignContact pivot
+            (kind='contact_source').
+        eligibility_workflow:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          description: null → call everyone in the pivot.
+        postcall_workflow:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        required_vars:
+          readOnly: true
+          description: Vars that must be present/non-empty or the row is skipped.
+        calling_window:
+          readOnly: true
+          nullable: true
+          description: null → inherit from channel.
+        timezone:
+          type: string
+          readOnly: true
+          nullable: true
+          description: null → inherit from channel.
+        max_attempts_per_run:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent
+      - calling_window
+      - channel
+      - contact_source_workflow
+      - created_at
+      - eligibility_workflow
+      - id
+      - max_attempts_per_run
+      - medium
+      - message_purpose
+      - name
+      - postcall_workflow
+      - required_vars
+      - state
+      - timezone
+      - updated_at
+    CampaignPreview:
+      type: object
+      properties:
+        stats:
+          type: object
+          additionalProperties: {}
+        targets:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        skipped:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - skipped
+      - stats
+      - targets
+    CampaignSyncResult:
+      type: object
+      properties:
+        created:
+          type: integer
+        updated:
+          type: integer
+        dropped:
+          type: integer
+        invalid:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - created
+      - dropped
+      - errors
+      - invalid
+      - updated
     ChannelOutboundMessage:
       type: object
       description: Proactive send via a channel — recipient given explicitly.
@@ -1424,6 +1679,22 @@ components:
           type: string
       required:
       - refresh_token
+    MediumEnum:
+      enum:
+      - voice
+      - text
+      type: string
+      description: |-
+        * `voice` - Voice
+        * `text` - Text
+    MessagePurposeEnum:
+      enum:
+      - transactional
+      - commercial
+      type: string
+      description: |-
+        * `transactional` - Transactional
+        * `commercial` - Commercial
     Organization:
       type: object
       properties:
@@ -1842,6 +2113,18 @@ components:
           type: string
       required:
       - access_token
+    StateEnum:
+      enum:
+      - draft
+      - active
+      - paused
+      - archived
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `active` - Active
+        * `paused` - Paused
+        * `archived` - Archived
     StatusEnum:
       enum:
       - pending
