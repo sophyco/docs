@@ -462,6 +462,14 @@ paths:
         description: Project UUID
         required: true
       - in: query
+        name: schedule_id
+        schema:
+          type: string
+          format: uuid
+        description: Preview under this CampaignSchedule's eligibility_workflow. Omit
+          to preview with no eligibility rule (everyone in the pivot) — eligibility
+          is per-schedule, not a campaign default.
+      - in: query
         name: sync
         schema:
           type: boolean
@@ -995,7 +1003,7 @@ paths:
           description: ''
   /api/transcripts/{project_id}/:
     get:
-      operationId: transcripts_list
+      operationId: transcripts_retrieve
       description: List transcripts for a project
       parameters:
       - in: query
@@ -1051,9 +1059,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PaginatedTranscriptList'
+                $ref: '#/components/schemas/PaginatedTranscriptList'
           description: ''
   /api/transcripts/{project_id}/{transcript_id}/labels/:
     patch:
@@ -1180,7 +1186,7 @@ paths:
           description: ''
   /api/transcripts/{project_id}/dialogues/:
     get:
-      operationId: transcripts_dialogues_list
+      operationId: transcripts_dialogues_retrieve
       description: List dialogues for a conversation
       parameters:
       - in: query
@@ -1236,9 +1242,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PaginatedDialogueList'
+                $ref: '#/components/schemas/PaginatedDialogueList'
           description: ''
   /api/transcripts/{project_id}/labels/:
     get:
@@ -1427,12 +1431,6 @@ components:
           nullable: true
           description: contact_source workflow that syncs the CampaignContact pivot
             (kind='contact_source').
-        eligibility_workflow:
-          type: string
-          format: uuid
-          readOnly: true
-          nullable: true
-          description: null → call everyone in the pivot.
         postcall_workflow:
           type: string
           format: uuid
@@ -1467,7 +1465,6 @@ components:
       - channel
       - contact_source_workflow
       - created_at
-      - eligibility_workflow
       - id
       - max_attempts_per_run
       - medium

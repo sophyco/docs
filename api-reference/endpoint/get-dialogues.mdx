@@ -3,88 +3,112 @@ title: 'List Dialogues'
 openapi: 'GET /api/transcripts/{project_id}/dialogues/'
 ---
 
-Retrieve conversation dialogues for a project with optional filtering.
+Retrieve the individual messages (dialogues) of a conversation, with optional filtering and pagination.
 
 ## Path Parameters
 
-- `projectId` (string, required): Project UUID
+- `project_id` (string, required): Project UUID
 
 ## Query Parameters
 
-- `conversationID` (string): Filter by conversation ID
+- `conversationID` (string, **required**): Conversation ID. Omitting it returns `400`.
 - `sessionID` (string): Filter by session ID
-- `role` (string): Filter by role (user, assistant, human, etc.)
-- `format` (string): Filter by format (launch, request, trace, result)
-- `type` (string): Filter by type (text, image, action, etc.)
-- `status` (string): Filter by status (pending, processing, completed, cancelled)
+- `role` (string): Filter by role (see below)
+- `format` (string): Filter by format (`launch`, `request`, `trace`, `result`)
+- `type` (string): Filter by type (see below)
+- `status` (string): Filter by status (`pending`, `processing`, `completed`, `cancelled`)
+- `offset` (integer): Number of items to skip (default `0`)
+- `limit` (integer): Max results to return (default `100`, max `1000`)
 
 ## Response
 
-Returns an array of dialogue objects.
+Returns a paginated object. The dialogues are in `results`, ordered by `startTime` descending (newest first).
 
 ```json
-[
-  {
-    "_id": "507f191e810c19729de860ea",
-    "projectID": "uuid",
-    "conversationID": "uuid",
-    "sessionID": "string",
-    "role": "user",
-    "format": "request",
-    "type": "text",
-    "message": "Hello, how can you help me?",
-    "input": {
+{
+  "count": 42,
+  "offset": 0,
+  "limit": 100,
+  "results": [
+    {
+      "_id": "507f191e810c19729de860ea",
+      "projectID": "uuid",
+      "conversationID": "uuid",
+      "sessionID": "string",
       "role": "user",
-      "content": "Hello, how can you help me?"
-    },
-    "payload": {
-      "message_id": "msg-123"
-    },
-    "parent_message_id": null,
-    "proactive": false,
-    "source": null,
-    "status": "completed",
-    "startTime": "2026-04-20T09:00:00Z"
-  }
-]
+      "format": "request",
+      "type": "text",
+      "message": "Hello, how can you help me?",
+      "input": {
+        "role": "user",
+        "content": "Hello, how can you help me?"
+      },
+      "parent_message_id": null,
+      "proactive": false,
+      "source": null,
+      "status": "completed",
+      "startTime": "2026-04-20T09:00:00Z"
+    }
+  ]
+}
 ```
+
+<Note>
+The internal `payload` field (platform message IDs and raw provider payloads) is
+not exposed by this endpoint.
+</Note>
 
 ## Filter Values
 
 ### role
-- `user` - Customer/user message
-- `assistant` - AI assistant message
-- `human` - Human agent message
-- `system` - System message
+- `user` — Customer/user message
+- `assistant` — AI assistant message
+- `human` — Human agent message
+- `system` — System message
+- `developer` — Injected developer/context message
+- `reasoning` — Model reasoning step
+- `tool_call` — Tool/function call made by the agent
 
-### status
-- `pending` - Waiting to process
-- `processing` - Currently processing
-- `completed` - Successfully completed
-- `cancelled` - Cancelled/failed
+### format
+- `launch` — Conversation launch
+- `request` — Inbound request
+- `trace` — Intermediate trace
+- `result` — Final result
 
 ### type
-- `text` - Text message
-- `image` - Image message
-- `action` - Action trigger
-- `debug` - Debug information
+- `text` — Text message
+- `image` — Image message
+- `video` — Video message
+- `choice` — Quick reply / choice
+- `action` — Action trigger
+- `launch` — Launch event
+- `flow` — Flow step
+- `block` — Block step
+- `request` — Request event
+- `debug` — Debug information
+
+### status
+- `pending` — Waiting to process
+- `processing` — Currently processing
+- `completed` — Successfully completed
+- `cancelled` — Cancelled/failed
 
 ## Examples
 
 ```bash
-# Get all dialogues
-curl -X GET http://localhost:8000/api/transcripts/{projectId}/dialogues/ \
+# All dialogues of a conversation
+curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/dialogues/?conversationID={conversation_id}" \
   -H "Authorization: Bearer suk_..."
 
-# Get completed messages
-curl -X GET "http://localhost:8000/api/transcripts/{projectId}/dialogues/?status=completed" \
+# Completed messages only
+curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/dialogues/?conversationID={conversation_id}&status=completed" \
   -H "Authorization: Bearer suk_..."
 
-# Get user messages only
-curl -X GET "http://localhost:8000/api/transcripts/{projectId}/dialogues/?role=user" \
+# User messages only
+curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/dialogues/?conversationID={conversation_id}&role=user" \
   -H "Authorization: Bearer suk_..."
 
-# Get completed user messages
-curl -X GET "http://localhost:8000/api/transcripts/{projectId}/dialogues/?role=user&status=completed" \
+# Second page of 50
+curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/dialogues/?conversationID={conversation_id}&offset=50&limit=50" \
   -H "Authorization: Bearer suk_..."
 ```
