@@ -61,8 +61,13 @@
             "group": "Authentication",
             "pages": [
               "api-reference/endpoint/login",
+              "api-reference/endpoint/logout",
+              "api-reference/endpoint/refresh-token",
               "api-reference/endpoint/list-tokens",
-              "api-reference/endpoint/create-token"
+              "api-reference/endpoint/create-token",
+              "api-reference/endpoint/get-token",
+              "api-reference/endpoint/update-token",
+              "api-reference/endpoint/delete-token"
             ]
           },
           {
@@ -81,6 +86,10 @@
             "group": "Transcripts & Dialogues",
             "pages": [
               "api-reference/endpoint/get-transcripts",
+              "api-reference/endpoint/mark-transcript-read",
+              "api-reference/endpoint/toggle-transcript-star",
+              "api-reference/endpoint/set-transcript-labels",
+              "api-reference/endpoint/list-transcript-labels",
               "api-reference/endpoint/get-dialogues"
             ]
           },

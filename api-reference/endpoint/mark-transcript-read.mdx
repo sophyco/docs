@@ -1,0 +1,50 @@
+---
+title: 'Mark Transcript as Read'
+openapi: 'patch /api/transcripts/{project_id}/{transcript_id}/read/'
+---
+
+Mark a transcript as read for the authenticated user. Each user's read status is tracked independently — marking a transcript as read does not affect other users.
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+- `transcript_id` (string, required): Transcript ID
+
+## Response
+
+Returns the updated transcript object with `unread: false` for the current user.
+
+```json
+{
+  "_id": "507f1f77bcf86cd799439011",
+  "projectID": "uuid",
+  "conversationID": "uuid",
+  "sessionID": "string",
+  "reportTags": [],
+  "unread": false,
+  "starred": false,
+  "labels": ["VIP"],
+  "platform": "whatsapp",
+  "browser": "Chrome",
+  "device": "desktop",
+  "os": "macOS",
+  "user": {
+    "name": "John Doe",
+    "image": "https://..."
+  },
+  "createdAt": "2026-04-20T09:00:00Z",
+  "updatedAt": "2026-04-20T10:00:00Z"
+}
+```
+
+## Notes
+
+- Calling this endpoint multiple times is safe — it is idempotent.
+- To retrieve unread transcripts for the current user, use `GET /api/transcripts/{project_id}/?unread=true`.
+
+## Example
+
+```bash
+curl -X PATCH https://platform-api.sophy.co/api/transcripts/{project_id}/{transcript_id}/read/ \
+  -H "Authorization: Bearer suk_..."
+```

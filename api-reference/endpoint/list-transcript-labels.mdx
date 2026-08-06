@@ -1,0 +1,31 @@
+---
+title: 'List Project Labels'
+openapi: 'get /api/transcripts/{project_id}/labels/'
+---
+
+Returns all unique labels used across transcripts in a project, sorted alphabetically. Use this for autocomplete when adding labels to a transcript.
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+
+## Response
+
+```json
+{
+  "labels": ["Bilgi Talebi", "Şikayet", "VIP"]
+}
+```
+
+## Notes
+
+- Labels are derived from existing transcripts — no predefined list is maintained.
+- To filter transcripts by a label, use `GET /api/transcripts/{project_id}/?label=VIP`.
+- To set labels on a transcript, use `PATCH /api/transcripts/{project_id}/{transcript_id}/labels/`.
+
+## Example
+
+```bash
+curl https://platform-api.sophy.co/api/transcripts/{project_id}/labels/ \
+  -H "Authorization: Bearer suk_..."
+```

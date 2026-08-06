@@ -8,9 +8,7 @@ paths:
   /api/auth/login/:
     post:
       operationId: auth_login_create
-      description: |-
-        User login endpoint. Accepts username and password.
-        Returns user info and API token for subsequent requests.
+      description: User login endpoint. Returns JWT access + refresh tokens.
       tags:
       - auth
       requestBody:
@@ -33,6 +31,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Login'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: Blacklists the refresh token, invalidating the session.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: Returns a new access token given a valid refresh token.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
           description: ''
   /api/auth/tokens/:
     get:
@@ -62,7 +111,7 @@ paths:
       tags:
       - auth
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -90,7 +139,7 @@ paths:
               $ref: '#/components/schemas/APIToken'
         required: true
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -115,7 +164,7 @@ paths:
       tags:
       - auth
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -150,7 +199,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedAPIToken'
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -174,10 +223,389 @@ paths:
       tags:
       - auth
       security:
-      - tokenAuth: []
+      - jwtAuth: []
       responses:
         '204':
           description: No response body
+  /api/billing/callback/{gateway}/:
+    post:
+      operationId: billing_callback_create
+      parameters:
+      - in: path
+        name: gateway
+        schema:
+          type: string
+        description: Payment gateway name (e.g. paytr)
+        required: true
+      tags:
+      - Billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GatewayCallback'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GatewayCallback'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GatewayCallback'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/billing/payments/{id}/:
+    get:
+      operationId: billing_payments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Payment ID (UUID)
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/billing/payments/{id}/profile/:
+    get:
+      operationId: billing_payments_profile_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingProfile'
+          description: ''
+    post:
+      operationId: billing_payments_profile_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BillingProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BillingProfile'
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingProfile'
+          description: ''
+  /api/billing/payments/{id}/token/{gateway}/:
+    post:
+      operationId: billing_payments_token_create
+      parameters:
+      - in: path
+        name: gateway
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/billing/payments/{session_id}/session/:
+    get:
+      operationId: billing_payments_session_retrieve
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+        description: Payment session ID (e.g. SPUU4V61XFW3)
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/campaigns/{project_id}/:
+    get:
+      operationId: campaigns_list
+      description: List campaigns in a project.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - campaigns
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Campaign'
+          description: ''
+  /api/campaigns/{project_id}/{campaign_id}/:
+    get:
+      operationId: campaigns_retrieve
+      description: Retrieve a single campaign.
+      parameters:
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - campaigns
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+          description: ''
+  /api/campaigns/{project_id}/{campaign_id}/preview/:
+    post:
+      operationId: campaigns_preview_create
+      description: 'Dry-run: who would be dialed, with which vars. Nothing is dispatched.'
+      parameters:
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      - in: query
+        name: schedule_id
+        schema:
+          type: string
+          format: uuid
+        description: Preview under this CampaignSchedule's eligibility_workflow. Omit
+          to preview with no eligibility rule (everyone in the pivot) — eligibility
+          is per-schedule, not a campaign default.
+      - in: query
+        name: sync
+        schema:
+          type: boolean
+        description: Re-sync the pivot first (default true).
+      tags:
+      - campaigns
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignPreview'
+          description: ''
+  /api/campaigns/{project_id}/{campaign_id}/sync/:
+    post:
+      operationId: campaigns_sync_create
+      description: Run contact_source → pivot sync (persists the pivot; no dialing).
+      parameters:
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - campaigns
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignSyncResult'
+          description: ''
+  /api/communication/v1/channels/{channel_id}/messages/:
+    post:
+      operationId: communication_v1_channels_messages_create
+      description: |-
+        Proactive send via a channel directly — resolves or creates the
+        conversation for the given recipient (e.g. a voice agent notifying a
+        customer without a prior inbound message).
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: string
+          format: uuid
+        description: Channel UUID
+        required: true
+      tags:
+      - communication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelOutboundMessage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChannelOutboundMessage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChannelOutboundMessage'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
+  /api/communication/v1/conversations/{conversation_id}/messages/:
+    post:
+      operationId: communication_v1_conversations_messages_create
+      description: |-
+        Reply within an existing conversation — the channel and recipient are
+        implied by the conversation, the same way an AI agent replies.
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: string
+          format: uuid
+        description: Conversation UUID
+        required: true
+      tags:
+      - communication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationOutboundMessage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConversationOutboundMessage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConversationOutboundMessage'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
   /api/organizations/:
     get:
       operationId: organizations_list
@@ -207,6 +635,7 @@ paths:
       - organizations
       security:
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -232,6 +661,7 @@ paths:
       - organizations
       security:
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -275,6 +705,7 @@ paths:
       - organizations
       security:
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -311,6 +742,7 @@ paths:
         required: true
       security:
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -343,6 +775,7 @@ paths:
       - organizations
       security:
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -385,6 +818,7 @@ paths:
               $ref: '#/components/schemas/PatchedProject'
       security:
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -416,6 +850,7 @@ paths:
       - organizations
       security:
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '204':
           description: No response body
@@ -543,6 +978,7 @@ paths:
       tags:
       - schema
       security:
+      - jwtAuth: []
       - tokenAuth: []
       - {}
       responses:
@@ -567,7 +1003,7 @@ paths:
           description: ''
   /api/transcripts/{project_id}/:
     get:
-      operationId: transcripts_list
+      operationId: transcripts_retrieve
       description: List transcripts for a project
       parameters:
       - in: query
@@ -575,10 +1011,20 @@ paths:
         schema:
           type: string
       - in: query
+        name: label
+        schema:
+          type: string
+        description: Filter by label
+      - in: query
         name: limit
         schema:
           type: integer
         description: Max results to return (default 100, max 1000)
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
       - in: query
         name: platform
         schema:
@@ -595,6 +1041,11 @@ paths:
         schema:
           type: string
       - in: query
+        name: starred
+        schema:
+          type: boolean
+        description: Filter by starred status for current user
+      - in: query
         name: unread
         schema:
           type: boolean
@@ -602,18 +1053,140 @@ paths:
       - transcripts
       security:
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Transcript'
+                $ref: '#/components/schemas/PaginatedTranscriptList'
+          description: ''
+  /api/transcripts/{project_id}/{transcript_id}/labels/:
+    patch:
+      operationId: transcripts_labels_partial_update
+      description: Replace labels on a transcript
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project ID
+        required: true
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        description: Transcript ID
+        required: true
+      tags:
+      - transcripts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSetLabelsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSetLabelsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSetLabelsRequest'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transcript'
+          description: ''
+  /api/transcripts/{project_id}/{transcript_id}/read/:
+    patch:
+      operationId: transcripts_read_partial_update
+      description: Mark a transcript as read for the current user
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project ID
+        required: true
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        description: Transcript ID
+        required: true
+      tags:
+      - transcripts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transcript'
+          description: ''
+  /api/transcripts/{project_id}/{transcript_id}/star/:
+    patch:
+      operationId: transcripts_star_partial_update
+      description: Toggle star for the current user on a transcript
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project ID
+        required: true
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        description: Transcript ID
+        required: true
+      tags:
+      - transcripts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transcript'
           description: ''
   /api/transcripts/{project_id}/dialogues/:
     get:
-      operationId: transcripts_dialogues_list
+      operationId: transcripts_dialogues_retrieve
       description: List dialogues for a conversation
       parameters:
       - in: query
@@ -631,6 +1204,11 @@ paths:
         schema:
           type: integer
         description: Max results to return (default 100, max 1000)
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
       - in: path
         name: project_id
         schema:
@@ -658,15 +1236,64 @@ paths:
       - transcripts
       security:
       - tokenAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Dialogue'
+                $ref: '#/components/schemas/PaginatedDialogueList'
           description: ''
+  /api/transcripts/{project_id}/labels/:
+    get:
+      operationId: transcripts_labels_retrieve
+      description: List all unique labels used in a project (for autocomplete)
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project ID
+        required: true
+      tags:
+      - transcripts
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelList'
+          description: ''
+  /api/workflows/recordings/{filename}/:
+    get:
+      operationId: workflows_recordings_retrieve
+      description: |-
+        Provider-independent, permanent recording link. The email link points here;
+        on click we mint a fresh short-lived signed URL for the private S3 object
+        (key reconstructed from the self-contained filename) and 302-redirect.
+
+        Public by design — security is the unguessable filename (contains the VAPI
+        call UUID). Used when a workflow's recording.link_from is the S3 destination.
+      parameters:
+      - in: path
+        name: filename
+        schema:
+          type: string
+        description: Self-contained recording filename ({call_id}_{ts}_{assistant_id}_{type}.wav)
+        required: true
+      tags:
+      - workflows
+      security:
+      - {}
+      responses:
+        '302':
+          description: No response body
+        '404':
+          description: No response body
 components:
   schemas:
     APIToken:
@@ -680,7 +1307,7 @@ components:
           type: string
           readOnly: true
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/APITokenTypeEnum'
         name:
           type: string
           description: Token name/description
@@ -722,6 +1349,216 @@ components:
       - token
       - updated_at
       - user_id
+    APITokenTypeEnum:
+      enum:
+      - user
+      - service
+      type: string
+      description: |-
+        * `user` - User Token
+        * `service` - Service Account Token
+    AccountTypeEnum:
+      enum:
+      - individual
+      - business
+      type: string
+      description: |-
+        * `individual` - Individual
+        * `business` - Business
+    BillingProfile:
+      type: object
+      properties:
+        account_type:
+          $ref: '#/components/schemas/AccountTypeEnum'
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        company_name:
+          type: string
+          maxLength: 255
+        tax_id:
+          type: string
+          maxLength: 20
+        phone:
+          type: string
+          maxLength: 30
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        address: {}
+        po_number:
+          type: string
+          maxLength: 100
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          readOnly: true
+        medium:
+          allOf:
+          - $ref: '#/components/schemas/MediumEnum'
+          readOnly: true
+        message_purpose:
+          allOf:
+          - $ref: '#/components/schemas/MessagePurposeEnum'
+          readOnly: true
+        channel:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Line + credentials + concurrency quota.
+        agent:
+          type: integer
+          readOnly: true
+          description: Chosen at campaign creation; the campaign carries the agent.
+        contact_source_workflow:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          description: contact_source workflow that syncs the CampaignContact pivot
+            (kind='contact_source').
+        postcall_workflow:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        required_vars:
+          readOnly: true
+          description: Vars that must be present/non-empty or the row is skipped.
+        calling_window:
+          readOnly: true
+          nullable: true
+          description: null → inherit from channel.
+        timezone:
+          type: string
+          readOnly: true
+          nullable: true
+          description: null → inherit from channel.
+        max_attempts_per_run:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent
+      - calling_window
+      - channel
+      - contact_source_workflow
+      - created_at
+      - id
+      - max_attempts_per_run
+      - medium
+      - message_purpose
+      - name
+      - postcall_workflow
+      - required_vars
+      - state
+      - timezone
+      - updated_at
+    CampaignPreview:
+      type: object
+      properties:
+        stats:
+          type: object
+          additionalProperties: {}
+        targets:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        skipped:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - skipped
+      - stats
+      - targets
+    CampaignSyncResult:
+      type: object
+      properties:
+        created:
+          type: integer
+        updated:
+          type: integer
+        dropped:
+          type: integer
+        invalid:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - created
+      - dropped
+      - errors
+      - invalid
+      - updated
+    ChannelOutboundMessage:
+      type: object
+      description: Proactive send via a channel — recipient given explicitly.
+      properties:
+        type:
+          $ref: '#/components/schemas/TypeDffEnum'
+        content:
+          type: string
+        caption:
+          type: string
+        template_name:
+          type: string
+        language:
+          type: string
+        variables: {}
+        client_message_id:
+          type: string
+        to:
+          type: string
+          description: Recipient phone number (E.164 recommended).
+      required:
+      - to
+      - type
+    ConversationOutboundMessage:
+      type: object
+      description: Reply within an existing conversation — channel/recipient are implied.
+      properties:
+        type:
+          $ref: '#/components/schemas/TypeDffEnum'
+        content:
+          type: string
+        caption:
+          type: string
+        template_name:
+          type: string
+        language:
+          type: string
+        variables: {}
+        client_message_id:
+          type: string
+      required:
+      - type
     Dialogue:
       type: object
       properties:
@@ -746,9 +1583,6 @@ components:
         input:
           type: object
           additionalProperties: {}
-        payload:
-          type: object
-          additionalProperties: {}
         parent_message_id:
           type: string
           nullable: true
@@ -769,7 +1603,6 @@ components:
       - input
       - message
       - parent_message_id
-      - payload
       - proactive
       - projectID
       - role
@@ -778,6 +1611,38 @@ components:
       - startTime
       - status
       - type
+    GatewayCallback:
+      type: object
+      properties:
+        merchant_oid:
+          type: string
+        status:
+          type: string
+      required:
+      - merchant_oid
+      - status
+    GatewayEnum:
+      enum:
+      - paytr
+      type: string
+      description: '* `paytr` - PayTR'
+    KindEnum:
+      enum:
+      - initial
+      - recurring
+      type: string
+      description: |-
+        * `initial` - Initial
+        * `recurring` - Recurring
+    LabelList:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+      required:
+      - labels
     Login:
       type: object
       properties:
@@ -788,7 +1653,10 @@ components:
         password:
           type: string
           writeOnly: true
-        token:
+        access_token:
+          type: string
+          readOnly: true
+        refresh_token:
           type: string
           readOnly: true
         user:
@@ -796,10 +1664,34 @@ components:
           additionalProperties: {}
           readOnly: true
       required:
+      - access_token
       - email
       - password
-      - token
+      - refresh_token
       - user
+    LogoutRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+      required:
+      - refresh_token
+    MediumEnum:
+      enum:
+      - voice
+      - text
+      type: string
+      description: |-
+        * `voice` - Voice
+        * `text` - Text
+    MessagePurposeEnum:
+      enum:
+      - transactional
+      - commercial
+      type: string
+      description: |-
+        * `transactional` - Transactional
+        * `commercial` - Commercial
     Organization:
       type: object
       properties:
@@ -822,6 +1714,22 @@ components:
       - id
       - name
       - project_count
+    OutboundMessageResult:
+      type: object
+      properties:
+        conversation_id:
+          type: string
+        message_id:
+          type: string
+          nullable: true
+        success:
+          type: boolean
+        raw: {}
+        deduplicated:
+          type: boolean
+      required:
+      - conversation_id
+      - success
     PaginatedAPITokenList:
       type: object
       required:
@@ -845,6 +1753,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/APIToken'
+    PaginatedDialogueList:
+      type: object
+      properties:
+        count:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dialogue'
+      required:
+      - count
+      - limit
+      - offset
+      - results
     PaginatedOrganizationList:
       type: object
       required:
@@ -891,6 +1817,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Project'
+    PaginatedTranscriptList:
+      type: object
+      properties:
+        count:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transcript'
+      required:
+      - count
+      - limit
+      - offset
+      - results
     PatchedAPIToken:
       type: object
       properties:
@@ -902,7 +1846,7 @@ components:
           type: string
           readOnly: true
         type:
-          $ref: '#/components/schemas/TypeEnum'
+          $ref: '#/components/schemas/APITokenTypeEnum'
         name:
           type: string
           description: Token name/description
@@ -959,6 +1903,168 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedSetLabelsRequest:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+    PatchedTranscript:
+      type: object
+      properties:
+        _id:
+          type: string
+          title: ' id'
+        projectID:
+          type: string
+        conversationID:
+          type: string
+        sessionID:
+          type: string
+        reportTags:
+          type: array
+          items:
+            type: string
+        unread:
+          type: boolean
+          readOnly: true
+        starred:
+          type: boolean
+          readOnly: true
+        labels:
+          type: array
+          items:
+            type: string
+        platform:
+          type: string
+        browser:
+          type: string
+        device:
+          type: string
+        os:
+          type: string
+        user:
+          allOf:
+          - $ref: '#/components/schemas/TranscriptUser'
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Payment:
+      type: object
+      description: |-
+        Public checkout payload. Both views using it are AllowAny with no auth.
+
+        gateway_response/gateway_events are deliberately absent: they carry the raw
+        PayTR payload (hash, merchant_oid, webhook history) and merchant-side error
+        text. Failures surface through failure_code/failure_message instead. metadata
+        is projected through explicit nested serializers so a new internal key added
+        to it never leaks.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_name:
+          type: string
+          readOnly: true
+        gateway:
+          $ref: '#/components/schemas/GatewayEnum'
+        amount_cents:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        currency:
+          type: string
+          maxLength: 10
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        items:
+          description: "\n        Each item:\n        - name: str\n        - kind:
+            one-time | recurring\n        - quantity: int\n        - unit_price_cents:
+            int (USD source or display currency)\n        - amount_cents: int (unit_price_cents
+            * quantity)\n        - currency: str (display only)\n        "
+        pricing:
+          allOf:
+          - $ref: '#/components/schemas/PaymentPricing'
+          nullable: true
+          readOnly: true
+        fx:
+          allOf:
+          - $ref: '#/components/schemas/PaymentFx'
+          nullable: true
+          readOnly: true
+        failure_code:
+          type: string
+          nullable: true
+          readOnly: true
+        failure_message:
+          type: string
+          nullable: true
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        is_expired:
+          type: boolean
+          readOnly: true
+      required:
+      - created_at
+      - failure_code
+      - failure_message
+      - fx
+      - id
+      - is_expired
+      - organization_name
+      - pricing
+    PaymentFx:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        rate:
+          type: number
+          format: double
+        subtotal:
+          type: integer
+    PaymentPricing:
+      type: object
+      description: |-
+        The pricing breakdown a checkout page renders. See Payment.metadata help_text.
+
+        Every field is optional: metadata is written by management commands with no
+        schema, and older rows predate some keys.
+      properties:
+        base_type:
+          type: string
+        discount_type:
+          type: string
+        discount_cents:
+          type: integer
+        discount_percentage:
+          type: integer
+        tax_rate:
+          type: integer
+        net_amount_cents:
+          type: integer
+        tax_amount_cents:
+          type: integer
+        final_amount:
+          type: integer
     Project:
       type: object
       properties:
@@ -990,6 +2096,44 @@ components:
       - organization_id
       - organization_name
       - updated_at
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+      required:
+      - refresh_token
+    RefreshTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+      required:
+      - access_token
+    StateEnum:
+      enum:
+      - draft
+      - active
+      - paused
+      - archived
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `active` - Active
+        * `paused` - Paused
+        * `archived` - Archived
+    StatusEnum:
+      enum:
+      - pending
+      - success
+      - failed
+      - expired
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `success` - Success
+        * `failed` - Failed
+        * `expired` - Expired
     Transcript:
       type: object
       properties:
@@ -1008,6 +2152,14 @@ components:
             type: string
         unread:
           type: boolean
+          readOnly: true
+        starred:
+          type: boolean
+          readOnly: true
+        labels:
+          type: array
+          items:
+            type: string
         platform:
           type: string
         browser:
@@ -1032,11 +2184,13 @@ components:
       - conversationID
       - createdAt
       - device
+      - labels
       - os
       - platform
       - projectID
       - reportTags
       - sessionID
+      - starred
       - unread
       - updatedAt
       - user
@@ -1050,15 +2204,23 @@ components:
       required:
       - image
       - name
-    TypeEnum:
+    TypeDffEnum:
       enum:
-      - user
-      - service
+      - text
+      - image
+      - document
+      - template
       type: string
       description: |-
-        * `user` - User Token
-        * `service` - Service Account Token
+        * `text` - text
+        * `image` - image
+        * `document` - document
+        * `template` - template
   securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
     tokenAuth:
       type: http
       scheme: bearer

@@ -3,58 +3,108 @@ title: 'List Transcripts'
 openapi: 'GET /api/transcripts/{project_id}/'
 ---
 
-Retrieve conversation transcripts for a project with optional filtering.
+Retrieve conversation transcripts for a project with optional filtering and pagination.
+
+Read (`unread`), star (`starred`) and label (`labels`) state is returned inline on every transcript, so a single call gives you everything the inbox needs to render.
 
 ## Path Parameters
 
-- `projectId` (string, required): Project UUID
+- `project_id` (string, required): Project UUID
 
 ## Query Parameters
 
 - `conversationID` (string): Filter by conversation ID
 - `sessionID` (string): Filter by session ID
 - `platform` (string): Filter by platform (whatsapp, webchat, etc.)
-- `unread` (boolean): Filter by unread status
+- `unread` (boolean): `true` returns only transcripts the current user has **not** read, `false` only those already read
+- `starred` (boolean): `true` returns only transcripts starred by the current user, `false` only the unstarred ones
+- `label` (string): Return only transcripts carrying this label (exact match)
+- `offset` (integer): Number of items to skip (default `0`)
+- `limit` (integer): Max results to return (default `100`, max `1000`)
+
+<Note>
+`unread` and `starred` are **per user**. They are evaluated against the user
+behind the token making the request, so two users hitting the same URL can get
+different results.
+</Note>
 
 ## Response
 
-Returns an array of transcript objects.
+Returns a paginated object. The transcripts are in `results`, ordered by `createdAt` descending (newest first).
 
 ```json
-[
-  {
-    "_id": "507f1f77bcf86cd799439011",
-    "projectID": "uuid",
-    "conversationID": "uuid",
-    "sessionID": "string",
-    "reportTags": ["urgent"],
-    "unread": false,
-    "platform": "whatsapp",
-    "browser": "Chrome",
-    "device": "desktop",
-    "os": "macOS",
-    "user": {
-      "name": "John Doe",
-      "image": "https://..."
-    },
-    "createdAt": "2026-04-20T09:00:00Z",
-    "updatedAt": "2026-04-20T10:00:00Z"
-  }
-]
+{
+  "count": 248,
+  "offset": 0,
+  "limit": 100,
+  "results": [
+    {
+      "_id": "507f1f77bcf86cd799439011",
+      "projectID": "uuid",
+      "conversationID": "uuid",
+      "sessionID": "string",
+      "reportTags": ["urgent"],
+      "unread": false,
+      "starred": true,
+      "labels": ["VIP", "Şikayet"],
+      "platform": "whatsapp",
+      "browser": "Chrome",
+      "device": "desktop",
+      "os": "macOS",
+      "user": {
+        "name": "John Doe",
+        "image": "https://..."
+      },
+      "createdAt": "2026-04-20T09:00:00Z",
+      "updatedAt": "2026-04-20T10:00:00Z"
+    }
+  ]
+}
 ```
+
+### Response fields
+
+- `count` (integer): Total number of transcripts matching the filters, ignoring `offset`/`limit`
+- `offset` / `limit` (integer): The pagination window actually applied
+- `results[].unread` (boolean): `true` when the current user has not marked this transcript as read
+- `results[].starred` (boolean): `true` when the current user has starred this transcript
+- `results[].labels` (array of strings): Free-form labels on the transcript, shared by everyone in the project
+
+## Managing read, star and label state
+
+These are separate `PATCH` endpoints — the list endpoint is read-only.
+
+| Action | Endpoint | Scope |
+| --- | --- | --- |
+| Mark as read | [`PATCH /api/transcripts/{project_id}/{transcript_id}/read/`](/api-reference/endpoint/mark-transcript-read) | Per user |
+| Toggle star | [`PATCH /api/transcripts/{project_id}/{transcript_id}/star/`](/api-reference/endpoint/toggle-transcript-star) | Per user |
+| Set labels | [`PATCH /api/transcripts/{project_id}/{transcript_id}/labels/`](/api-reference/endpoint/set-transcript-labels) | Shared across the project |
+| List project labels | [`GET /api/transcripts/{project_id}/labels/`](/api-reference/endpoint/list-transcript-labels) | Shared across the project |
 
 ## Examples
 
 ```bash
-# Get all transcripts
-curl -X GET http://localhost:8000/api/transcripts/{projectId}/ \
+# Get the first page of transcripts
+curl -X GET https://platform-api.sophy.co/api/transcripts/{project_id}/ \
   -H "Authorization: Bearer suk_..."
 
 # Filter by platform
-curl -X GET "http://localhost:8000/api/transcripts/{projectId}/?platform=whatsapp" \
+curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?platform=whatsapp" \
   -H "Authorization: Bearer suk_..."
 
-# Filter by unread
-curl -X GET "http://localhost:8000/api/transcripts/{projectId}/?unread=true" \
+# Unread transcripts for the current user
+curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?unread=true" \
+  -H "Authorization: Bearer suk_..."
+
+# Starred transcripts for the current user
+curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?starred=true" \
+  -H "Authorization: Bearer suk_..."
+
+# Transcripts carrying the "VIP" label
+curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?label=VIP" \
+  -H "Authorization: Bearer suk_..."
+
+# Second page of 50
+curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?offset=50&limit=50" \
   -H "Authorization: Bearer suk_..."
 ```
