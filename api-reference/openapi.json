@@ -284,6 +284,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/Payment'
           description: ''
+  /api/billing/payments/{id}/methods/:
+    get:
+      operationId: billing_payments_methods_retrieve
+      description: Cards the payer may reuse for this invoice, most recent first.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodList'
+          description: ''
   /api/billing/payments/{id}/profile/:
     get:
       operationId: billing_payments_profile_retrieve
@@ -353,6 +375,53 @@ paths:
         required: true
       tags:
       - Billing
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/billing/payments/{id}/token/{gateway}/saved-card/:
+    post:
+      operationId: billing_payments_token_saved_card_create
+      description: |-
+        Form fields for paying this invoice with one of its saved cards.
+
+        The checkout posts the response to its 'action' URL; PayTR then takes the
+        cardholder through 3DS and redirects to merchant_ok_url / merchant_fail_url.
+        The card is named by PaymentMethod id — the gateway token is filled in here,
+        never sent to the client.
+      parameters:
+      - in: path
+        name: gateway
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedCardToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SavedCardToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SavedCardToken'
+        required: true
       security:
       - {}
       responses:
@@ -2041,6 +2110,61 @@ components:
           format: double
         subtotal:
           type: integer
+    PaymentMethod:
+      type: object
+      description: |-
+        A stored card as the checkout page may show it.
+
+        gateway_token (PayTR ctoken) is deliberately absent: the card endpoints are
+        AllowAny, so the client names a card by its PaymentMethod id and the token is
+        resolved server-side. The cardholder name in metadata is left out for the
+        same reason — last 4 + brand + bank identify the card without adding PII to
+        a payload anyone holding the link can read.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        card_brand:
+          type: string
+          maxLength: 50
+        card_last_4:
+          type: string
+          maxLength: 4
+        bank:
+          type: string
+          readOnly: true
+        exp_month:
+          type: string
+          readOnly: true
+        exp_year:
+          type: string
+          readOnly: true
+        require_cvv:
+          type: boolean
+          readOnly: true
+      required:
+      - bank
+      - exp_month
+      - exp_year
+      - id
+      - require_cvv
+    PaymentMethodList:
+      type: object
+      description: 'The card picker''s payload: the cards, and which one the invoice
+        is on.'
+      properties:
+        selected_id:
+          type: string
+          format: uuid
+          nullable: true
+        methods:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentMethod'
+      required:
+      - methods
+      - selected_id
     PaymentPricing:
       type: object
       description: |-
@@ -2110,6 +2234,19 @@ components:
           type: string
       required:
       - access_token
+    SavedCardToken:
+      type: object
+      description: |-
+        Request body for paying an invoice with an already-stored card.
+
+        Only the card is named. CVV, when the card requires one, is typed into the
+        form the browser posts to PayTR and never passes through us.
+      properties:
+        payment_method_id:
+          type: string
+          format: uuid
+      required:
+      - payment_method_id
     StateEnum:
       enum:
       - draft
