@@ -306,6 +306,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaymentMethodList'
           description: ''
+  /api/billing/payments/{id}/methods/{method_id}/:
+    delete:
+      operationId: billing_payments_methods_destroy
+      description: |-
+        Remove a stored card, at the gateway and here.
+
+        The row is deleted outright rather than deactivated. Its token is dead at
+        the gateway, and a dormant row would be found again by the get_or_create in
+        process_callback if the customer re-added the same card — the gateway
+        reissues the same ctoken — leaving them with a card they just added that no
+        listing shows. Both FKs to it are SET_NULL, so past invoices keep their
+        metadata['card'] copy (written when the card was attached) and any
+        subscription on it falls back to the checkout-link flow on the next run.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: method_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Billing
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
   /api/billing/payments/{id}/profile/:
     get:
       operationId: billing_payments_profile_retrieve
