@@ -2298,12 +2298,14 @@ components:
       - success
       - failed
       - expired
+      - cancelled
       type: string
       description: |-
         * `pending` - Pending
         * `success` - Success
         * `failed` - Failed
         * `expired` - Expired
+        * `cancelled` - Cancelled
     Transcript:
       type: object
       properties:
