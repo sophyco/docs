@@ -1639,6 +1639,12 @@ components:
         to:
           type: string
           description: Recipient phone number (E.164 recommended).
+        contact_name:
+          type: string
+          description: 'Optional display name for the recipient. Sets the name of
+            the contact created on the platform (e.g. Chatdash/Chatwoot), and updates
+            it on an existing contact. Omitted or empty: an existing contact keeps
+            its current name, a newly created one is named after its phone number.'
       required:
       - to
       - type
