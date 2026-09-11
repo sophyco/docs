@@ -1,0 +1,56 @@
+---
+title: 'Get Call'
+openapi: 'GET /api/calls/{project_id}/{call_id}/'
+---
+
+Retrieve a single call together with its stored report — the transcript, the provider's analysis and the structured outputs the agent produced.
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+- `call_id` (string, required): Call UUID
+
+## Response
+
+Every field from [List Calls](/api-reference/endpoint/list-calls), plus:
+
+```json
+{
+  "id": "uuid",
+  "direction": "inbound",
+  "outcome": "answered",
+  "duration_sec": 42.0,
+  "report_id": "string",
+  "structured_output": { "caller_intent": { "value": "reschedule" } },
+  "vars_snapshot": { "customer_name": "..." },
+  "report": {
+    "transcript": "AI: Merhaba...\nUser: ...",
+    "analysis": {
+      "summary": "Customer asked to reschedule.",
+      "successEvaluation": "true"
+    },
+    "structured_outputs": {},
+    "recording_url": "https://...",
+    "recording_refs": [
+      { "name": "s3", "key": "recordings/....wav", "view_url": "https://..." }
+    ],
+    "report_type": "end-of-call-report",
+    "message_count": 14
+  }
+}
+```
+
+### Response fields
+
+- `report` (object | null): `null` when no report was stored — typically a call that failed before the provider produced one
+- `report.recording_refs` (array): Durable storage keys (S3 / Google Drive). The provider's own `recording_url` expires; these do not
+- `report.report_type` (string): `end-of-call-report` (from the webhook) or `call-list` (reconciled from the provider's call list)
+- `report.message_count` (integer): Number of conversation turns — fetch them with [Get Call Messages](/api-reference/endpoint/get-call-messages)
+- `vars_snapshot` (object): The variables sent to the agent, frozen at dial time
+
+## Example
+
+```bash
+curl -X GET https://platform-api.sophy.co/api/calls/{project_id}/{call_id}/ \
+  -H "Authorization: Bearer suk_..."
+```

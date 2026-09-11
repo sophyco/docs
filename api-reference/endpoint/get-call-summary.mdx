@@ -1,0 +1,64 @@
+---
+title: 'Get Call Summary'
+openapi: 'GET /api/calls/{project_id}/summary/'
+---
+
+Aggregate KPIs for a project's calls: volume, answer rate, talk time and cost. Computed in the database, so it stays fast over hundreds of thousands of calls.
+
+Accepts the same filters as [List Calls](/api-reference/endpoint/list-calls), so any list view can show totals for exactly what is on screen.
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+
+## Query Parameters
+
+- `group_by` (string): `day`, `outcome`, `state`, `channel` or `campaign`. Omit for totals only
+- `date_from` / `date_to` (datetime, ISO 8601): Bound `started_at`
+- `direction` (string): `inbound` or `outbound`
+- `origin` (string): `inbound`, `campaign`, `manual` or `api`
+- `campaign_id` (string): Restrict to one campaign
+
+## Response
+
+```json
+{
+  "totals": {
+    "calls": 20891,
+    "answered": 4428,
+    "talk_sec": 80755.1,
+    "avg_duration_sec": 18.24,
+    "cost": "85.0650",
+    "answer_rate": 0.212
+  },
+  "group_by": "outcome",
+  "groups": [
+    { "outcome": "failed", "calls": 10528, "answered": 1, "talk_sec": 12.0, "avg_duration_sec": 12.0, "cost": "0.0100", "answer_rate": 0.0001 },
+    { "outcome": "answered", "calls": 4427, "answered": 4427, "talk_sec": 80700.0, "avg_duration_sec": 18.23, "cost": "85.0000", "answer_rate": 1.0 }
+  ]
+}
+```
+
+### Response fields
+
+- `totals.answered` (integer): Calls where a person was actually reached — measured as `duration_sec > 0`
+- `totals.answer_rate` (number): `answered / calls`, or `null` when there are no calls
+- `totals.avg_duration_sec` (number): Averaged over **answered** calls only, so unanswered attempts do not drag it to zero
+- `group_by` (string | null): Echoes the grouping actually applied; `null` when the parameter was missing or unrecognized
+- `groups` (array): Empty when no `group_by` was given. Each row carries the same metrics as `totals`
+
+## Examples
+
+```bash
+# Project totals
+curl -X GET https://platform-api.sophy.co/api/calls/{project_id}/summary/ \
+  -H "Authorization: Bearer suk_..."
+
+# Daily volume for a month
+curl -X GET "https://platform-api.sophy.co/api/calls/{project_id}/summary/?group_by=day&date_from=2026-07-01T00:00:00Z&date_to=2026-07-31T23:59:59Z" \
+  -H "Authorization: Bearer suk_..."
+
+# Outcome breakdown for one campaign
+curl -X GET "https://platform-api.sophy.co/api/calls/{project_id}/summary/?group_by=outcome&campaign_id={campaign_id}" \
+  -H "Authorization: Bearer suk_..."
+```

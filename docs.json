@@ -94,6 +94,17 @@
             ]
           },
           {
+            "group": "Calls",
+            "pages": [
+              "api-reference/endpoint/list-calls",
+              "api-reference/endpoint/get-call",
+              "api-reference/endpoint/get-call-messages",
+              "api-reference/endpoint/get-call-summary",
+              "api-reference/endpoint/get-number-history",
+              "api-reference/endpoint/replay-call-report"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "error-handling",

@@ -1,0 +1,107 @@
+---
+title: 'List Calls'
+openapi: 'GET /api/calls/{project_id}/'
+---
+
+Retrieve voice calls for a project with filtering and pagination — the call-side counterpart of [List Transcripts](/api-reference/endpoint/get-transcripts), and it uses the same envelope.
+
+Inbound and outbound calls live in one list. Rows are intentionally lightweight: the transcript and the turn-by-turn conversation are **not** included here, so paging stays fast no matter how many calls a project has. Fetch those per call with [Get Call](/api-reference/endpoint/get-call) and [Get Call Messages](/api-reference/endpoint/get-call-messages).
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+
+## Query Parameters
+
+- `direction` (string): `inbound` or `outbound`
+- `origin` (string): `inbound`, `campaign`, `manual` or `api`
+- `state` (string): `queued`, `ringing`, `in_progress`, `ended`, `failed`, `cancelled`
+- `outcome` (string): `answered`, `no_answer`, `busy`, `voicemail`, `failed`, `cancelled`
+- `channel_id` (string): Filter by channel UUID
+- `agent_id` (string): Filter by AI agent UUID
+- `campaign_id` (string): Filter by campaign UUID
+- `run_id` (string): Filter by campaign run UUID
+- `contact_id` (string): Filter by contact UUID
+- `platform_type` (string): Filter by platform (`vapi`, …)
+- `number` (string): Substring match against **either** number — the one dialed or the one calling
+- `date_from` / `date_to` (datetime, ISO 8601): Bound `started_at`
+- `has_recording` (boolean): `true` returns only calls with a recording
+- `offset` (integer): Number of items to skip (default `0`)
+- `limit` (integer): Max results to return (default `100`, max `1000`)
+
+<Note>
+`outcome` is the provider-normalized result and carries no business rules. "Answered but under 5 seconds counts as unanswered" is an eligibility decision, not an outcome — use `duration_sec` for that.
+</Note>
+
+## Response
+
+Returns a paginated object, ordered by `started_at` descending (newest first).
+
+```json
+{
+  "count": 20891,
+  "offset": 0,
+  "limit": 100,
+  "results": [
+    {
+      "id": "uuid",
+      "project_id": "uuid",
+      "channel_id": "uuid",
+      "channel_name": "vapi-main-line",
+      "platform_type": "vapi",
+      "direction": "outbound",
+      "origin": "campaign",
+      "provider_call_id": "string",
+      "from_number": "",
+      "to_number": "+90...",
+      "agent_id": "uuid",
+      "agent_name": "Collections Agent",
+      "agent_ref": "asst-...",
+      "run_id": "uuid",
+      "campaign_id": "uuid",
+      "campaign_name": "Overdue — July",
+      "contact_id": "uuid",
+      "run_attempt_no": 1,
+      "state": "ended",
+      "outcome": "answered",
+      "end_reason_raw": "customer-ended-call",
+      "started_at": "2026-07-22T08:46:00Z",
+      "ended_at": "2026-07-22T08:46:42Z",
+      "duration_sec": 42.0,
+      "cost": "0.0500",
+      "recording_url": "https://...",
+      "has_recording": true,
+      "has_report": true,
+      "created_at": "2026-07-22T08:45:58Z",
+      "updated_at": "2026-07-22T08:46:43Z"
+    }
+  ]
+}
+```
+
+### Response fields
+
+- `count` (integer): Total calls matching the filters, ignoring `offset`/`limit`
+- `results[].has_report` (boolean): Whether a stored report (transcript, messages, analysis) exists for this call
+- `results[].end_reason_raw` (string): The provider's own reason string, stored verbatim
+- `results[].campaign_id` / `campaign_name`: Present only for `origin=campaign` calls
+
+## Examples
+
+```bash
+# First page
+curl -X GET https://platform-api.sophy.co/api/calls/{project_id}/ \
+  -H "Authorization: Bearer suk_..."
+
+# Answered calls only
+curl -X GET "https://platform-api.sophy.co/api/calls/{project_id}/?outcome=answered" \
+  -H "Authorization: Bearer suk_..."
+
+# One campaign, within a date range
+curl -X GET "https://platform-api.sophy.co/api/calls/{project_id}/?campaign_id={campaign_id}&date_from=2026-07-01T00:00:00Z" \
+  -H "Authorization: Bearer suk_..."
+
+# Everything involving a number
+curl -X GET "https://platform-api.sophy.co/api/calls/{project_id}/?number=5304834206" \
+  -H "Authorization: Bearer suk_..."
+```
