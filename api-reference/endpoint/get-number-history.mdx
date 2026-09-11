@@ -1,0 +1,68 @@
+---
+title: 'Get Number Call History'
+openapi: 'GET /api/calls/{project_id}/numbers/{number}/'
+---
+
+Everything that ever happened on one phone number: a running tally plus every individual attempt.
+
+This answers "who did we call, how many times, and did we ever reach them" in a single request. The tally is maintained as calls finish rather than counted on read, so it stays O(1) however long the history gets — and inbound and outbound calls on the same number share one record.
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+- `number` (string, required): Phone number in E.164 (e.g. `+905301234567`)
+
+## Query Parameters
+
+- `offset` (integer): Number of calls to skip (default `0`)
+- `limit` (integer): Max calls to return (default `100`, max `1000`)
+
+## Response
+
+```json
+{
+  "number": "+905301234567",
+  "stats": {
+    "project_id": "uuid",
+    "number_e164": "+905301234567",
+    "contact_id": "uuid",
+    "outbound_attempts": 224,
+    "outbound_answered": 0,
+    "inbound_calls": 2,
+    "inbound_answered": 1,
+    "total_calls": 226,
+    "total_answered": 1,
+    "outcome_counts": { "failed": 224, "answered": 1, "busy": 1 },
+    "total_talk_sec": 63.0,
+    "total_cost": "0.1200",
+    "first_call_at": "2026-05-02T07:10:00Z",
+    "last_call_at": "2026-07-22T08:46:00Z",
+    "last_answered_at": "2026-06-11T14:02:00Z",
+    "last_outcome": "failed",
+    "updated_at": "2026-07-22T08:46:43Z"
+  },
+  "count": 226,
+  "offset": 0,
+  "limit": 100,
+  "results": []
+}
+```
+
+### Response fields
+
+- `stats` (object | null): `null` when the number has no calls in this project
+- `stats.outcome_counts` (object): How many times each outcome occurred, ever
+- `stats.total_answered` (integer): Calls where a person was reached (`duration_sec > 0`)
+- `results` (array): The individual calls, newest first — same shape as [List Calls](/api-reference/endpoint/list-calls)
+- `count` (integer): Total calls on this number, ignoring `offset`/`limit`
+
+<Note>
+A number repeatedly dialed with `outbound_answered: 0` is usually worth acting on — it is an unreachable number the campaign keeps retrying.
+</Note>
+
+## Example
+
+```bash
+curl -X GET https://platform-api.sophy.co/api/calls/{project_id}/numbers/+905301234567/ \
+  -H "Authorization: Bearer suk_..."
+```

@@ -487,6 +487,322 @@ paths:
               schema:
                 $ref: '#/components/schemas/Payment'
           description: ''
+  /api/calls/{project_id}/:
+    get:
+      operationId: calls_list
+      description: List calls in a project, newest first.
+      parameters:
+      - in: query
+        name: agent_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: channel_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: contact_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: direction
+        schema:
+          type: string
+        description: inbound | outbound
+      - in: query
+        name: has_recording
+        schema:
+          type: boolean
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
+      - in: query
+        name: number
+        schema:
+          type: string
+        description: Substring match on either number
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
+      - in: query
+        name: origin
+        schema:
+          type: string
+        description: inbound | campaign | manual | api
+      - in: query
+        name: outcome
+        schema:
+          type: string
+      - in: query
+        name: platform_type
+        schema:
+          type: string
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      - in: query
+        name: run_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: state
+        schema:
+          type: string
+      tags:
+      - calls
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCallList'
+          description: ''
+  /api/calls/{project_id}/{call_id}/:
+    get:
+      operationId: calls_retrieve
+      description: Retrieve one call, with its stored report.
+      parameters:
+      - in: path
+        name: call_id
+        schema:
+          type: string
+          format: uuid
+        description: Call UUID
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - calls
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallDetail'
+          description: ''
+  /api/calls/{project_id}/{call_id}/messages/:
+    get:
+      operationId: calls_messages
+      description: The turn-by-turn conversation for a call.
+      parameters:
+      - in: path
+        name: call_id
+        schema:
+          type: string
+          format: uuid
+        description: Call UUID
+        required: true
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: offset
+        schema:
+          type: integer
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - calls
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCallMessageList'
+          description: ''
+  /api/calls/{project_id}/{call_id}/replay/:
+    post:
+      operationId: calls_replay
+      description: |-
+        Re-run the post-call workflow for a call from its stored report.
+
+        Side-effecting: this re-sends the report email. Nothing is recomputed from
+        the provider — the stored report is replayed through the same entry point
+        the webhook uses, so recording storage and email happen exactly as they did
+        the first time.
+      parameters:
+      - in: path
+        name: call_id
+        schema:
+          type: string
+          format: uuid
+        description: Call UUID
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallReplayRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CallReplayRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CallReplayRequest'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallReplayAccepted'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallReplayNoReport'
+          description: ''
+  /api/calls/{project_id}/numbers/{number}/:
+    get:
+      operationId: calls_number_history
+      description: 'Everything that ever happened on one number: the rollup plus every
+        attempt.'
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: path
+        name: number
+        schema:
+          type: string
+        description: Phone number in E.164
+        required: true
+      - in: query
+        name: offset
+        schema:
+          type: integer
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - calls
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NumberCallHistory'
+          description: ''
+  /api/calls/{project_id}/summary/:
+    get:
+      operationId: calls_summary
+      description: Aggregate KPIs for a project's calls. Computed in the DB, not in
+        Python.
+      parameters:
+      - in: query
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: direction
+        schema:
+          type: string
+      - in: query
+        name: group_by
+        schema:
+          type: string
+        description: day | outcome | state | channel | campaign (omit for totals only)
+      - in: query
+        name: origin
+        schema:
+          type: string
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - calls
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallSummary'
+          description: ''
   /api/campaigns/{project_id}/:
     get:
       operationId: campaigns_list
@@ -956,6 +1272,99 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/platforms/embed/configs/:
+    get:
+      operationId: platforms_embed_configs_list
+      description: 'Every embeddable widget, so the embed service can enumerate or
+        warm them. Widgets missing a slug on either the organization or the widget
+        are omitted: they have no embed URL.'
+      summary: List embed configurations
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        description: '`Bearer <EMBED_SERVICE_KEY>` — the secret shared with the embed
+          service.'
+        required: true
+      - in: query
+        name: tenant_slug
+        schema:
+          type: string
+        description: Limit the listing to one organization.
+      - in: query
+        name: updated_since
+        schema:
+          type: string
+          format: date-time
+        description: Only widgets changed at or after this timestamp (ISO 8601).
+      tags:
+      - platforms
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmbedConfig'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/platforms/embed/configs/{tenant_slug}/{widget_slug}/:
+    get:
+      operationId: platforms_embed_configs_retrieve
+      description: Configuration for a single widget, addressed the same way its embed
+        URL is. Returns 404 for an unknown, slug-less or deactivated widget.
+      summary: Retrieve one embed configuration
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        description: '`Bearer <EMBED_SERVICE_KEY>` — the secret shared with the embed
+          service.'
+        required: true
+      - in: path
+        name: tenant_slug
+        schema:
+          type: string
+        description: Organization slug (first segment of the embed URL).
+        required: true
+      - in: path
+        name: widget_slug
+        schema:
+          type: string
+        description: Webchat slug (second segment of the embed URL).
+        required: true
+      tags:
+      - platforms
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmbedConfig'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/schema/:
     get:
       operationId: schema_retrieve
@@ -1467,6 +1876,14 @@ components:
       description: |-
         * `individual` - Individual
         * `business` - Business
+    BackendEnum:
+      enum:
+      - native
+      - chatwoot
+      type: string
+      description: |-
+        * `native` - native
+        * `chatwoot` - chatwoot
     BillingProfile:
       type: object
       properties:
@@ -1495,6 +1912,491 @@ components:
         po_number:
           type: string
           maxLength: 100
+    BlankEnum:
+      enum:
+      - ''
+    CallDetail:
+      type: object
+      description: 'A single call: ledger row plus its stored report.'
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project_id:
+          type: string
+          format: uuid
+          readOnly: true
+        channel_id:
+          type: string
+          format: uuid
+          readOnly: true
+        channel_name:
+          type: string
+          readOnly: true
+        platform_type:
+          type: string
+          description: Denormalized from channel for reporting.
+          maxLength: 50
+        direction:
+          $ref: '#/components/schemas/DirectionEnum'
+        origin:
+          $ref: '#/components/schemas/OriginEnum'
+        provider_call_id:
+          type: string
+          nullable: true
+          description: Provider-side call id (VAPI call.id). Null until dispatched.
+          maxLength: 255
+        from_number:
+          type: string
+          maxLength: 64
+        to_number:
+          type: string
+          maxLength: 64
+        agent_id:
+          type: integer
+          nullable: true
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        agent_ref:
+          type: string
+          nullable: true
+          description: Raw provider assistant id — survives agent deletion.
+          maxLength: 255
+        run_id:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+        campaign_id:
+          type: string
+          format: uuid
+          readOnly: true
+        campaign_name:
+          type: string
+          readOnly: true
+        contact_id:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+        run_attempt_no:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        state:
+          $ref: '#/components/schemas/StateFf0Enum'
+        outcome:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/OutcomeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        end_reason_raw:
+          type: string
+          nullable: true
+          description: Provider's raw endedReason, stored verbatim.
+          maxLength: 255
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        duration_sec:
+          type: number
+          format: double
+          nullable: true
+        cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          nullable: true
+        recording_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 2048
+        has_recording:
+          type: boolean
+          readOnly: true
+        has_report:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        report_id:
+          type: string
+          nullable: true
+          maxLength: 64
+        structured_output: {}
+        vars_snapshot: {}
+        report:
+          allOf:
+          - $ref: '#/components/schemas/CallReport'
+          nullable: true
+          readOnly: true
+      required:
+      - agent_id
+      - agent_name
+      - campaign_id
+      - campaign_name
+      - channel_id
+      - channel_name
+      - contact_id
+      - created_at
+      - direction
+      - has_recording
+      - has_report
+      - id
+      - origin
+      - project_id
+      - report
+      - run_id
+      - structured_output
+      - updated_at
+      - vars_snapshot
+    CallList:
+      type: object
+      description: One row in the studio call list. No large fields, no per-row Mongo
+        hit.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project_id:
+          type: string
+          format: uuid
+          readOnly: true
+        channel_id:
+          type: string
+          format: uuid
+          readOnly: true
+        channel_name:
+          type: string
+          readOnly: true
+        platform_type:
+          type: string
+          description: Denormalized from channel for reporting.
+          maxLength: 50
+        direction:
+          $ref: '#/components/schemas/DirectionEnum'
+        origin:
+          $ref: '#/components/schemas/OriginEnum'
+        provider_call_id:
+          type: string
+          nullable: true
+          description: Provider-side call id (VAPI call.id). Null until dispatched.
+          maxLength: 255
+        from_number:
+          type: string
+          maxLength: 64
+        to_number:
+          type: string
+          maxLength: 64
+        agent_id:
+          type: integer
+          nullable: true
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        agent_ref:
+          type: string
+          nullable: true
+          description: Raw provider assistant id — survives agent deletion.
+          maxLength: 255
+        run_id:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+        campaign_id:
+          type: string
+          format: uuid
+          readOnly: true
+        campaign_name:
+          type: string
+          readOnly: true
+        contact_id:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+        run_attempt_no:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        state:
+          $ref: '#/components/schemas/StateFf0Enum'
+        outcome:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/OutcomeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        end_reason_raw:
+          type: string
+          nullable: true
+          description: Provider's raw endedReason, stored verbatim.
+          maxLength: 255
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        duration_sec:
+          type: number
+          format: double
+          nullable: true
+        cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          nullable: true
+        recording_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 2048
+        has_recording:
+          type: boolean
+          readOnly: true
+        has_report:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent_id
+      - agent_name
+      - campaign_id
+      - campaign_name
+      - channel_id
+      - channel_name
+      - contact_id
+      - created_at
+      - direction
+      - has_recording
+      - has_report
+      - id
+      - origin
+      - project_id
+      - run_id
+      - updated_at
+    CallMessage:
+      type: object
+      description: One turn of the conversation, as the provider recorded it.
+      properties:
+        role:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        time:
+          type: number
+          format: double
+          nullable: true
+        endTime:
+          type: number
+          format: double
+          nullable: true
+        secondsFromStart:
+          type: number
+          format: double
+          nullable: true
+        duration:
+          type: number
+          format: double
+          nullable: true
+        source:
+          type: string
+          nullable: true
+    CallReplayAccepted:
+      type: object
+      properties:
+        status:
+          type: string
+        call_id:
+          type: string
+          format: uuid
+        dispatch:
+          type: string
+          description: 'Which path ran: workflow_dispatched | legacy_dispatched |
+            outbound_finalized | no_route | unroutable. Only the dispatched variants
+            send a report email.'
+      required:
+      - call_id
+      - dispatch
+      - status
+    CallReplayNoReport:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    CallReplayRequest:
+      type: object
+      properties:
+        to:
+          type: array
+          items:
+            type: string
+            format: email
+          description: Send the report only to these addresses instead of the workflow's
+            configured recipients.
+    CallReport:
+      type: object
+      description: 'The Mongo-backed part of a call: what it produced.'
+      properties:
+        transcript:
+          type: string
+        analysis:
+          type: object
+          additionalProperties: {}
+        structured_outputs:
+          type: object
+          additionalProperties: {}
+        recording_url:
+          type: string
+        recording_refs:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        report_type:
+          type: string
+        message_count:
+          type: integer
+          readOnly: true
+      required:
+      - analysis
+      - message_count
+      - recording_refs
+      - recording_url
+      - report_type
+      - structured_outputs
+      - transcript
+    CallStats:
+      type: object
+      description: A number's whole history, in one row.
+      properties:
+        project_id:
+          type: string
+          format: uuid
+          readOnly: true
+        number_e164:
+          type: string
+          maxLength: 64
+        contact_id:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+        outbound_attempts:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        outbound_answered:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        inbound_calls:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        inbound_answered:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        total_calls:
+          type: integer
+          readOnly: true
+        total_answered:
+          type: integer
+          readOnly: true
+        outcome_counts:
+          description: 'Tally per outcome, e.g. {"answered": 3, "no_answer": 7}.'
+        total_talk_sec:
+          type: number
+          format: double
+        total_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,4})?$
+        first_call_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_call_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_answered_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_outcome:
+          type: string
+          nullable: true
+          maxLength: 16
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - contact_id
+      - number_e164
+      - project_id
+      - total_answered
+      - total_calls
+      - updated_at
+    CallSummary:
+      type: object
+      properties:
+        totals:
+          type: object
+          additionalProperties: {}
+        group_by:
+          type: string
+          nullable: true
+        groups:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - group_by
+      - groups
+      - totals
     Campaign:
       type: object
       properties:
@@ -1507,7 +2409,7 @@ components:
           readOnly: true
         state:
           allOf:
-          - $ref: '#/components/schemas/StateEnum'
+          - $ref: '#/components/schemas/CampaignStateEnum'
           readOnly: true
         medium:
           allOf:
@@ -1525,7 +2427,9 @@ components:
         agent:
           type: integer
           readOnly: true
+          nullable: true
           description: Chosen at campaign creation; the campaign carries the agent.
+            Null for text-only campaigns, which never place a call.
         contact_source_workflow:
           type: string
           format: uuid
@@ -1597,6 +2501,18 @@ components:
       - skipped
       - stats
       - targets
+    CampaignStateEnum:
+      enum:
+      - draft
+      - active
+      - paused
+      - archived
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `active` - Active
+        * `paused` - Paused
+        * `archived` - Archived
     CampaignSyncResult:
       type: object
       properties:
@@ -1719,6 +2635,153 @@ components:
       - startTime
       - status
       - type
+    DirectionEnum:
+      enum:
+      - inbound
+      - outbound
+      type: string
+      description: |-
+        * `inbound` - Inbound
+        * `outbound` - Outbound
+    EmbedChatwoot:
+      type: object
+      description: Present only when the widget runs against Chatwoot instead of the
+        native runtime.
+      properties:
+        baseURL:
+          type: string
+          description: Browser-facing ChatDash origin, without the /api suffix.
+        inboxIdentifier:
+          type: string
+          description: Chatwoot public inbox identifier (not the numeric inbox id).
+      required:
+      - baseURL
+      - inboxIdentifier
+    EmbedConfig:
+      type: object
+      description: |-
+        Everything the embed service needs to render one widget's script.
+
+        Mirrors the argument the widget bundle expects at
+        ``window.sophy.chat.load()``, plus the few fields the service needs to build
+        the script around it. Branding is NOT included: the bundle fetches that from
+        the publishing endpoint itself, and duplicating it would create a second
+        source of truth for the same fields.
+      properties:
+        tenant:
+          type: string
+          description: Organization slug; first segment of the embed URL.
+        widget:
+          type: string
+          description: Webchat slug; second segment of the embed URL.
+        bundle:
+          type: string
+          description: Widget runtime bundle the script injects.
+        backend:
+          allOf:
+          - $ref: '#/components/schemas/BackendEnum'
+          description: |-
+            Derived from the widget's Channel, not stored on the widget.
+
+            * `native` - native
+            * `chatwoot` - chatwoot
+        verify:
+          $ref: '#/components/schemas/EmbedVerify'
+        url:
+          type: string
+          description: Runtime base URL the widget posts to.
+        versionID:
+          allOf:
+          - $ref: '#/components/schemas/VersionIDEnum'
+          description: |-
+            Published version of the agent the widget talks to.
+
+            * `production` - production
+            * `development` - development
+        identity:
+          type: object
+          additionalProperties: {}
+          description: 'How the visitor is resolved on the host page, e.g. {''adapter'':
+            ''ticimax''}. Known adapters: none, ticimax, localstorage.'
+        proactive:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmbedProactive'
+        assistant:
+          type: object
+          additionalProperties: {}
+          description: 'Loader-level assistant overrides: inputLauncher, and position/launcherPosition/chatPosition
+            from [''left'', ''right'', ''center''].'
+        user:
+          type: object
+          additionalProperties: {}
+          description: 'Guest fallback, e.g. {''name'': ''Guest User''}.'
+        render:
+          type: object
+          additionalProperties: {}
+          description: 'Mount target, e.g. {''mode'': ''overlay''}. Modes: [''overlay'',
+            ''embedded'', ''sidebar''].'
+        analytics:
+          description: true, false, or 'dataLayer'. Absent → the bundle's default
+            (true).
+        language:
+          allOf:
+          - $ref: '#/components/schemas/LanguageEnum'
+          description: |-
+            Widget UI language.
+
+            * `en` - en
+            * `tr` - tr
+            * `de` - de
+        allowDangerousHTML:
+          type: boolean
+          description: Render raw HTML in assistant messages.
+        chatwoot:
+          allOf:
+          - $ref: '#/components/schemas/EmbedChatwoot'
+          description: Present only when backend is 'chatwoot'.
+        launch:
+          type: object
+          additionalProperties: {}
+          description: 'Launch event for the native runtime, e.g. {''event'': {''type'':
+            ''launch'', ''payload'': {...}}}. Absent when backend is ''chatwoot'',
+            which has no equivalent.'
+      required:
+      - assistant
+      - backend
+      - bundle
+      - identity
+      - proactive
+      - render
+      - tenant
+      - url
+      - user
+      - verify
+      - versionID
+      - widget
+    EmbedProactive:
+      type: object
+      description: A nudge the embed service schedules after the widget loads.
+      properties:
+        message:
+          type: string
+        delayMs:
+          type: integer
+          minimum: 0
+          description: Delay after load, in milliseconds.
+      required:
+      - delayMs
+      - message
+    EmbedVerify:
+      type: object
+      description: Identity the widget bundle sends back to the runtime.
+      properties:
+        projectID:
+          type: string
+          format: uuid
+          description: The Webchat's id. Sent as verify.projectID by the bundle.
+      required:
+      - projectID
     GatewayCallback:
       type: object
       properties:
@@ -1751,6 +2814,16 @@ components:
             type: string
       required:
       - labels
+    LanguageEnum:
+      enum:
+      - en
+      - tr
+      - de
+      type: string
+      description: |-
+        * `en` - en
+        * `tr` - tr
+        * `de` - de
     Login:
       type: object
       properties:
@@ -1800,6 +2873,35 @@ components:
       description: |-
         * `transactional` - Transactional
         * `commercial` - Commercial
+    NullEnum:
+      enum:
+      - null
+    NumberCallHistory:
+      type: object
+      properties:
+        number:
+          type: string
+        stats:
+          allOf:
+          - $ref: '#/components/schemas/CallStats'
+          nullable: true
+        count:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallList'
+      required:
+      - count
+      - limit
+      - number
+      - offset
+      - results
+      - stats
     Organization:
       type: object
       properties:
@@ -1822,6 +2924,18 @@ components:
       - id
       - name
       - project_count
+    OriginEnum:
+      enum:
+      - inbound
+      - campaign
+      - manual
+      - api
+      type: string
+      description: |-
+        * `inbound` - Inbound
+        * `campaign` - Campaign
+        * `manual` - Manual
+        * `api` - API
     OutboundMessageResult:
       type: object
       properties:
@@ -1838,6 +2952,22 @@ components:
       required:
       - conversation_id
       - success
+    OutcomeEnum:
+      enum:
+      - answered
+      - no_answer
+      - busy
+      - voicemail
+      - failed
+      - cancelled
+      type: string
+      description: |-
+        * `answered` - Answered
+        * `no_answer` - No Answer
+        * `busy` - Busy
+        * `voicemail` - Voicemail
+        * `failed` - Failed
+        * `cancelled` - Cancelled
     PaginatedAPITokenList:
       type: object
       required:
@@ -1861,6 +2991,45 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/APIToken'
+    PaginatedCallList:
+      type: object
+      properties:
+        count:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallList'
+      required:
+      - count
+      - limit
+      - offset
+      - results
+    PaginatedCallMessageList:
+      type: object
+      properties:
+        count:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        transcript:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallMessage'
+      required:
+      - count
+      - limit
+      - offset
+      - results
+      - transcript
     PaginatedDialogueList:
       type: object
       properties:
@@ -2149,6 +3318,18 @@ components:
           format: double
         subtotal:
           type: integer
+        rate_date:
+          type: string
+          nullable: true
+        rate_source:
+          type: string
+          nullable: true
+        rate_quote:
+          type: string
+          nullable: true
+        rate_updated_at:
+          type: string
+          nullable: true
     PaymentMethod:
       type: object
       description: |-
@@ -2286,18 +3467,22 @@ components:
           format: uuid
       required:
       - payment_method_id
-    StateEnum:
+    StateFf0Enum:
       enum:
-      - draft
-      - active
-      - paused
-      - archived
+      - queued
+      - ringing
+      - in_progress
+      - ended
+      - failed
+      - cancelled
       type: string
       description: |-
-        * `draft` - Draft
-        * `active` - Active
-        * `paused` - Paused
-        * `archived` - Archived
+        * `queued` - Queued
+        * `ringing` - Ringing
+        * `in_progress` - In Progress
+        * `ended` - Ended
+        * `failed` - Failed
+        * `cancelled` - Cancelled
     StatusEnum:
       enum:
       - pending
@@ -2394,6 +3579,14 @@ components:
         * `image` - image
         * `document` - document
         * `template` - template
+    VersionIDEnum:
+      enum:
+      - production
+      - development
+      type: string
+      description: |-
+        * `production` - production
+        * `development` - development
   securitySchemes:
     jwtAuth:
       type: http

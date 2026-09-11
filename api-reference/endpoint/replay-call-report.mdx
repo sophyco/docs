@@ -1,0 +1,64 @@
+---
+title: 'Replay Call Report'
+openapi: 'POST /api/calls/{project_id}/{call_id}/replay/'
+---
+
+Re-run a call's post-call workflow from its stored report — use this when someone asks for a call report to be sent again.
+
+No copy of the original email is kept. Instead the stored report is pushed back through the same code path the provider's webhook uses, so the report is rendered fresh against the current template and configuration. That also means a fixed template or handler can be re-applied to old calls.
+
+<Warning>
+This sends email. It is not a read-only preview — confirm with the user before calling it.
+</Warning>
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+- `call_id` (string, required): Call UUID
+
+## Body
+
+```json
+{
+  "to": ["someone@example.com"]
+}
+```
+
+- `to` (array of emails, optional): Send only to these addresses, overriding the workflow's configured recipients. Omit to send exactly where the workflow normally would
+
+## Response
+
+`202 Accepted`
+
+```json
+{
+  "status": "replayed",
+  "call_id": "uuid",
+  "dispatch": "workflow_dispatched"
+}
+```
+
+### `dispatch` values
+
+| Value | Meaning |
+| --- | --- |
+| `workflow_dispatched` | The post-call workflow ran — a report email was produced |
+| `legacy_dispatched` | Handled by the older per-agent handler — a report was produced |
+| `outbound_finalized` | An outbound call: finalized, but **no report email**. Outbound campaign calls have no per-call report workflow |
+| `no_route` / `unroutable` | The call's channel has no route, so nothing could run |
+
+`404` is returned when no report was ever stored for the call — typically a call that failed before the provider produced one.
+
+## Examples
+
+```bash
+# Re-send to the workflow's normal recipients
+curl -X POST https://platform-api.sophy.co/api/calls/{project_id}/{call_id}/replay/ \
+  -H "Authorization: Bearer suk_..."
+
+# Send this one report to a single address
+curl -X POST https://platform-api.sophy.co/api/calls/{project_id}/{call_id}/replay/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"to": ["me@example.com"]}'
+```

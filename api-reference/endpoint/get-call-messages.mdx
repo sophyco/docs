@@ -1,0 +1,54 @@
+---
+title: 'Get Call Messages'
+openapi: 'GET /api/calls/{project_id}/{call_id}/messages/'
+---
+
+Retrieve the turn-by-turn conversation of a call — the voice counterpart of [List Dialogues](/api-reference/endpoint/get-dialogues).
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+- `call_id` (string, required): Call UUID
+
+## Query Parameters
+
+- `offset` (integer): Number of turns to skip (default `0`)
+- `limit` (integer): Max turns to return (default `100`, max `1000`)
+
+## Response
+
+```json
+{
+  "count": 14,
+  "offset": 0,
+  "limit": 100,
+  "transcript": "AI: Merhaba...\nUser: ...",
+  "results": [
+    {
+      "role": "bot",
+      "message": "Merhaba, size nasıl yardımcı olabilirim?",
+      "time": 1753173960000,
+      "endTime": 1753173963000,
+      "secondsFromStart": 0.5,
+      "duration": 2500,
+      "source": ""
+    }
+  ]
+}
+```
+
+### Response fields
+
+- `transcript` (string): The whole conversation as flat text, handy when you just want to display or search it
+- `results[].role` (string): `system`, `bot` or `user`
+- `results[].secondsFromStart` (number): Offset from the start of the call — use it to line turns up with the recording
+- `count` (integer): Total turns, ignoring `offset`/`limit`
+
+Turns are returned in the order they happened. A call with no stored report returns `count: 0` and an empty `results`.
+
+## Example
+
+```bash
+curl -X GET https://platform-api.sophy.co/api/calls/{project_id}/{call_id}/messages/ \
+  -H "Authorization: Bearer suk_..."
+```
