@@ -2027,7 +2027,6 @@ components:
           readOnly: true
         has_report:
           type: boolean
-          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -2036,10 +2035,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-        report_id:
-          type: string
-          nullable: true
-          maxLength: 64
         structured_output: {}
         vars_snapshot: {}
         report:
@@ -2058,7 +2053,6 @@ components:
       - created_at
       - direction
       - has_recording
-      - has_report
       - id
       - origin
       - project_id
@@ -2180,7 +2174,6 @@ components:
           readOnly: true
         has_report:
           type: boolean
-          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -2200,7 +2193,6 @@ components:
       - created_at
       - direction
       - has_recording
-      - has_report
       - id
       - origin
       - project_id
