@@ -495,18 +495,34 @@ paths:
       - in: query
         name: agent_id
         schema:
+          type: integer
+        description: AI agent's numeric id.
+      - in: query
+        name: agent_name
+        schema:
           type: string
-          format: uuid
+        description: Agent name, case-insensitive substring. Use this when the UI
+          has a name rather than an id.
       - in: query
         name: campaign_id
         schema:
           type: string
           format: uuid
       - in: query
+        name: campaign_name
+        schema:
+          type: string
+        description: Campaign name, case-insensitive substring.
+      - in: query
         name: channel_id
         schema:
           type: string
           format: uuid
+      - in: query
+        name: channel_name
+        schema:
+          type: string
+        description: Channel name, case-insensitive substring.
       - in: query
         name: contact_id
         schema:
@@ -517,11 +533,15 @@ paths:
         schema:
           type: string
           format: date-time
+        description: 'Inclusive lower bound on created_at — when the call was recorded.
+          Not started_at: a call that never connected has none, and would drop out
+          of the range entirely.'
       - in: query
         name: date_to
         schema:
           type: string
           format: date-time
+        description: Inclusive upper bound on created_at.
       - in: query
         name: direction
         schema:
@@ -757,20 +777,36 @@ paths:
         Python.
       parameters:
       - in: query
+        name: agent_name
+        schema:
+          type: string
+      - in: query
         name: campaign_id
         schema:
           type: string
           format: uuid
       - in: query
+        name: campaign_name
+        schema:
+          type: string
+      - in: query
+        name: channel_name
+        schema:
+          type: string
+      - in: query
         name: date_from
         schema:
           type: string
           format: date-time
+        description: 'Inclusive lower bound on created_at — when the call was recorded.
+          Not started_at: a call that never connected has none, and would drop out
+          of the range entirely.'
       - in: query
         name: date_to
         schema:
           type: string
           format: date-time
+        description: Inclusive upper bound on created_at.
       - in: query
         name: direction
         schema:
@@ -2008,20 +2044,27 @@ components:
           type: string
           format: date-time
           nullable: true
+        last_attempt_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: 'When we actually reached or last attempted this call: started_at
+            if it connected, else ended_at (set even when a call never connects —
+            see Call.mark_failed/mark_cancelled), else created_at as the final fallback.
+            Matches the list''s sort order.'
         duration_sec:
           type: number
           format: double
           nullable: true
-        cost:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
-          nullable: true
         recording_url:
           type: string
           format: uri
+          readOnly: true
           nullable: true
-          maxLength: 2048
+          description: Sophy-hosted recording link, playable directly (it redirects
+            to a freshly signed URL for our stored copy). Null when we hold no copy
+            of the audio — the provider's own URL is never returned, as it expires
+            and needs an API key.
         has_recording:
           type: boolean
           readOnly: true
@@ -2054,8 +2097,10 @@ components:
       - direction
       - has_recording
       - id
+      - last_attempt_at
       - origin
       - project_id
+      - recording_url
       - report
       - run_id
       - structured_output
@@ -2155,20 +2200,27 @@ components:
           type: string
           format: date-time
           nullable: true
+        last_attempt_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: 'When we actually reached or last attempted this call: started_at
+            if it connected, else ended_at (set even when a call never connects —
+            see Call.mark_failed/mark_cancelled), else created_at as the final fallback.
+            Matches the list''s sort order.'
         duration_sec:
           type: number
           format: double
           nullable: true
-        cost:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
-          nullable: true
         recording_url:
           type: string
           format: uri
+          readOnly: true
           nullable: true
-          maxLength: 2048
+          description: Sophy-hosted recording link, playable directly (it redirects
+            to a freshly signed URL for our stored copy). Null when we hold no copy
+            of the audio — the provider's own URL is never returned, as it expires
+            and needs an API key.
         has_recording:
           type: boolean
           readOnly: true
@@ -2194,8 +2246,10 @@ components:
       - direction
       - has_recording
       - id
+      - last_attempt_at
       - origin
       - project_id
+      - recording_url
       - run_id
       - updated_at
     CallMessage:
@@ -2273,8 +2327,6 @@ components:
         structured_outputs:
           type: object
           additionalProperties: {}
-        recording_url:
-          type: string
         recording_refs:
           type: array
           items:
@@ -2289,7 +2341,6 @@ components:
       - analysis
       - message_count
       - recording_refs
-      - recording_url
       - report_type
       - structured_outputs
       - transcript
@@ -2340,10 +2391,6 @@ components:
         total_talk_sec:
           type: number
           format: double
-        total_cost:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,4})?$
         first_call_at:
           type: string
           format: date-time
@@ -2440,7 +2487,10 @@ components:
         calling_window:
           readOnly: true
           nullable: true
-          description: null → inherit from channel.
+          description: 'Bu kampanyanın arama/gönderim saatleri, ör. {"start": "09:00",
+            "end": "20:00", "days": [1,2,3,4,5]} — days cron numaralandırması (Paz=0…Cmt=6),
+            yazılmazsa her gün. Pencere kapandığında kuyrukta kalan iş iptal edilir.
+            null → kısıt yok (kanala düşer).'
         timezone:
           type: string
           readOnly: true
@@ -2833,8 +2883,8 @@ components:
           type: string
           readOnly: true
         user:
-          type: object
-          additionalProperties: {}
+          allOf:
+          - $ref: '#/components/schemas/User'
           readOnly: true
       required:
       - access_token
@@ -3446,6 +3496,16 @@ components:
           type: string
       required:
       - access_token
+    RoleEnum:
+      enum:
+      - owner
+      - admin
+      - agent
+      type: string
+      description: |-
+        * `owner` - Owner
+        * `admin` - Admin
+        * `agent` - Agent
     SavedCardToken:
       type: object
       description: |-
@@ -3571,6 +3631,59 @@ components:
         * `image` - image
         * `document` - document
         * `template` - template
+    User:
+      type: object
+      description: |-
+        Canonical user payload returned by login.
+
+        ``is_superuser`` / ``is_staff`` are platform-level flags (unrelated to the
+        org-scoped ``role``) and are read-only — they can only be granted from
+        Django admin, never through the API. They are also dropped from the payload
+        when false, so they only ship to the handful of accounts that hold them.
+        Consumers must treat an absent flag as false (fail closed).
+      properties:
+        id:
+          type: string
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        organization_ids:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+      required:
+      - id
+      - organization_ids
+      - username
     VersionIDEnum:
       enum:
       - production

@@ -18,7 +18,10 @@ Inbound and outbound calls live in one list. Rows are intentionally lightweight:
 - `state` (string): `queued`, `ringing`, `in_progress`, `ended`, `failed`, `cancelled`
 - `outcome` (string): `answered`, `no_answer`, `busy`, `voicemail`, `failed`, `cancelled`
 - `channel_id` (string): Filter by channel UUID
-- `agent_id` (string): Filter by AI agent UUID
+- `agent_id` (**integer**): Filter by AI agent id — an auto-increment integer, not a UUID
+- `agent_name` (string): Filter by agent name instead — case-insensitive substring
+- `channel_name` (string): Filter by channel name — case-insensitive substring
+- `campaign_name` (string): Filter by campaign name — case-insensitive substring
 - `campaign_id` (string): Filter by campaign UUID
 - `run_id` (string): Filter by campaign run UUID
 - `contact_id` (string): Filter by contact UUID
@@ -28,6 +31,14 @@ Inbound and outbound calls live in one list. Rows are intentionally lightweight:
 - `has_recording` (boolean): `true` returns only calls with a recording
 - `offset` (integer): Number of items to skip (default `0`)
 - `limit` (integer): Max results to return (default `100`, max `1000`)
+
+<Note>
+**Filtering by name.** Every id filter has a name-based twin (`agent_name`,
+`channel_name`, `campaign_name`), so a filter UI can pass what the user picked from a
+dropdown without first resolving it to an id. Matching is case-insensitive and partial:
+`agent_name=kiralabunu` returns the same set as `agent_id=49`. An unmatched name is not
+an error — it returns `count: 0`.
+</Note>
 
 <Note>
 `outcome` is the provider-normalized result and carries no business rules. "Answered but under 5 seconds counts as unanswered" is an eligibility decision, not an outcome — use `duration_sec` for that.
@@ -85,6 +96,17 @@ Returns a paginated object, ordered by `started_at` descending (newest first).
 - `results[].has_report` (boolean): Whether a stored report (transcript, messages, analysis) exists for this call
 - `results[].end_reason_raw` (string): The provider's own reason string, stored verbatim
 - `results[].campaign_id` / `campaign_name`: Present only for `origin=campaign` calls
+- `results[].agent_id` (**integer**): Unlike every other `*_id` on this object, the agent id is an integer, not a UUID
+- `results[].cost` (**string**): Sent as a string (`"0.0033"`) to preserve precision — parse before doing arithmetic. Note the aggregate `cost` in [Get Call Summary](/api-reference/endpoint/get-call-summary) is a number
+- `results[].to_number` / `from_number`: Outbound calls populate `to_number` and leave `from_number` empty; inbound is the reverse
+
+<Warning>
+Phone numbers are stored exactly as the provider supplied them, so **a leading `+` is
+not guaranteed** — `+905001234567` and `905001234567` both occur. Do not build a
+number yourself to pass to
+[Get Number Call History](/api-reference/endpoint/get-number-history); pass through the
+value you received here, and normalize only for display.
+</Warning>
 
 ## Examples
 

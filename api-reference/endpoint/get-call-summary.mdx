@@ -18,6 +18,10 @@ Accepts the same filters as [List Calls](/api-reference/endpoint/list-calls), so
 - `direction` (string): `inbound` or `outbound`
 - `origin` (string): `inbound`, `campaign`, `manual` or `api`
 - `campaign_id` (string): Restrict to one campaign
+- `agent_name` / `channel_name` / `campaign_name` (string): Name-based filters, case-insensitive substring
+
+Any filter accepted by [List Calls](/api-reference/endpoint/list-calls) works here too, so
+the KPI strip above a filtered table can always be made to agree with it.
 
 ## Response
 
