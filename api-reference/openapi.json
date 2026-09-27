@@ -5,6 +5,54 @@ info:
   description: REST API for authentication, token management, and transcript/dialogue
     retrieval
 paths:
+  /api/analytics/{project_id}/:
+    post:
+      operationId: analytics_batch
+      description: |-
+        Run a batch of independent aggregation queries against a project's
+        calls / conversations / campaigns in one request. Structural and
+        semantic errors are validated for the WHOLE batch up front (a single
+        400 listing every accepted-values set); once that passes, each query
+        runs independently — one query's runtime failure becomes an `error`
+        field in its own result slot, not a failed batch.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - analytics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsValidationError'
+          description: ''
   /api/auth/login/:
     post:
       operationId: auth_login_create
@@ -839,6 +887,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/CallSummary'
           description: ''
+  /api/calls/recordings/{filename}/:
+    get:
+      operationId: calls_recordings_retrieve
+      description: |-
+        Provider-independent, permanent recording link. The email link points here;
+        on click we mint a fresh short-lived signed URL for the private S3 object
+        (key reconstructed from the self-contained filename) and 302-redirect.
+
+        Public by design — security is the unguessable filename (contains the VAPI
+        call UUID). Used when a workflow's recording.link_from is the S3 destination.
+      parameters:
+      - in: path
+        name: filename
+        schema:
+          type: string
+        description: Self-contained recording filename ({call_id}_{ts}_{assistant_id}_{type}.wav)
+        required: true
+      tags:
+      - calls
+      security:
+      - {}
+      responses:
+        '302':
+          description: No response body
+        '404':
+          description: No response body
   /api/campaigns/{project_id}/:
     get:
       operationId: campaigns_list
@@ -1912,6 +1986,118 @@ components:
       description: |-
         * `individual` - Individual
         * `business` - Business
+    AnalyticsCapabilities:
+      type: object
+      properties:
+        calls:
+          type: boolean
+        conversations:
+          type: boolean
+        campaigns:
+          type: boolean
+      required:
+      - calls
+      - campaigns
+      - conversations
+    AnalyticsQuery:
+      type: object
+      properties:
+        name:
+          type: string
+        source:
+          type: string
+        step:
+          type: string
+          nullable: true
+        group_by:
+          type: array
+          items:
+            type: string
+        measures:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        filters:
+          type: object
+          additionalProperties: {}
+        top_n:
+          type: integer
+          minimum: 1
+          nullable: true
+      required:
+      - measures
+      - name
+      - source
+    AnalyticsRequest:
+      type: object
+      description: |-
+        Shape only — every semantic/enum check (is `source` known, is a
+        `group_by` member valid for that source, ...) lives in
+        analytics/services/query.py:validate_request(), not here, since the
+        valid sets are source-dependent rather than a fixed choice list.
+      properties:
+        timezone:
+          type: string
+          nullable: true
+        range:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        queries:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsQuery'
+      required:
+      - queries
+    AnalyticsResponse:
+      type: object
+      properties:
+        timezone:
+          type: string
+        range:
+          type: object
+          additionalProperties: {}
+        capabilities:
+          $ref: '#/components/schemas/AnalyticsCapabilities'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsResult'
+      required:
+      - capabilities
+      - range
+      - results
+      - timezone
+    AnalyticsResult:
+      type: object
+      properties:
+        name:
+          type: string
+        group_by:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        error:
+          type: string
+          nullable: true
+      required:
+      - name
+    AnalyticsValidationError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - errors
     BackendEnum:
       enum:
       - native
@@ -2059,12 +2245,8 @@ components:
         recording_url:
           type: string
           format: uri
-          readOnly: true
           nullable: true
-          description: Sophy-hosted recording link, playable directly (it redirects
-            to a freshly signed URL for our stored copy). Null when we hold no copy
-            of the audio — the provider's own URL is never returned, as it expires
-            and needs an API key.
+          readOnly: true
         has_recording:
           type: boolean
           readOnly: true

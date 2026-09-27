@@ -105,6 +105,12 @@
             ]
           },
           {
+            "group": "Analytics",
+            "pages": [
+              "api-reference/endpoint/batch-analytics"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "error-handling",

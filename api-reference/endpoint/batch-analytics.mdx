@@ -1,0 +1,103 @@
+---
+title: 'Batch Analytics'
+openapi: 'POST /api/analytics/{project_id}/'
+---
+
+Run several independent aggregation queries against a project's calls, conversations and campaigns in one request. A new chart on a dashboard is a new entry in `queries[]`, never a new endpoint — mirrors [Get Call Summary](/api-reference/endpoint/get-call-summary) but batched, two-dimensional (time bucket × one grouping dimension), and spanning all three sources in a single response.
+
+## Path Parameters
+
+- `project_id` (string, required): Project UUID
+
+## Request Body
+
+- `timezone` (string, IANA name, optional): Buckets and default range are computed in this timezone. Defaults to `Europe/Istanbul`.
+- `range` (object, optional): `{ "from": "<ISO 8601>", "to": "<ISO 8601>" }`, inclusive. Defaults to the last 7 days.
+- `queries` (array, required, 1 or more): each entry is independent —
+  - `name` (string, required): unique within the request; echoed back on the matching result
+  - `source` (string, required): `calls` | `conversations` | `campaigns`
+  - `step` (string | null): `hour` | `day` | `week` | `month` | `null` (no time axis, one row of totals)
+  - `group_by` (array, 0 or 1 element): a dimension name valid for `source` (see below)
+  - `measures` (array, required, 1 or more): a measure name valid for `source`
+  - `filters` (object, optional): a source-specific filter map (same vocabulary as [List Calls](/api-reference/endpoint/list-calls) for `calls`)
+  - `top_n` (integer, optional): keep the top N values of `group_by` by the first measure's total over the whole range; everything else collapses into one `"__other"` row per bucket. Requires a non-empty `group_by`.
+
+### Sources, dimensions and measures
+
+| `source` | `group_by` | `measures` | backing data |
+|---|---|---|---|
+| `calls` | `outcome`, `state`, `direction`, `origin`, `channel`, `campaign`, `agent`, `end_reason` | `count`, `answered`, `talk_sec`, `avg_duration_sec` | `communications.Call` |
+| `conversations` | `platform`, `label` | `count` | `transcripts.Transcript` — one document per conversation-day session (a conversation reopened after 24h counts as a second session) |
+| `campaigns` | `state` | `runs` | `campaigns.CampaignRun` (a row count, not the `stats` funnel) |
+
+`cost` is deliberately not a measure here — there is no per-project usage metering yet.
+
+## Response
+
+```json
+{
+  "timezone": "Europe/Istanbul",
+  "range": { "from": "2026-09-12T00:00:00+00:00", "to": "2026-09-19T00:00:00+00:00" },
+  "capabilities": { "calls": true, "conversations": true, "campaigns": false },
+  "results": [
+    {
+      "name": "calls_by_outcome",
+      "group_by": ["outcome"],
+      "rows": [
+        { "bucket": "2026-09-18", "outcome": "answered", "count": 41, "talk_sec": 1832.4 },
+        { "bucket": "2026-09-18", "outcome": "busy", "count": 118, "talk_sec": 0 }
+      ]
+    },
+    {
+      "name": "bad_query",
+      "error": "Query failed; see server logs."
+    }
+  ]
+}
+```
+
+### Response fields
+
+- `capabilities` (object): cheap existence checks per source, so a dashboard knows which sections apply to this project without inferring it from empty result sets
+- `results[].rows` (array): absent when the query failed
+- `results[].rows[].bucket` (string): absent entirely (not `null`) when `step` was `null`. Format: `day` → `YYYY-MM-DD`, `hour` → `YYYY-MM-DDTHH:00`, `week` → the Monday the week starts on (`YYYY-MM-DD`), `month` → `YYYY-MM`
+- `results[].error` (string): present only when that one query failed at runtime (e.g. a bad filter value) — the rest of the batch still returns normally, HTTP 200
+
+A structural problem (unknown `source`/`step`/`group_by`/`measure`/`filter`, `range.from` after `range.to`, `top_n` without `group_by`, a duplicate `name`) fails the **whole request** with HTTP 400 before any query runs:
+
+```json
+{
+  "errors": [
+    { "field": "group_by", "query": "by_agent", "value": "not_a_dimension",
+      "message": "Unknown group_by for source \"calls\".",
+      "accepted": ["agent", "campaign", "channel", "direction", "end_reason", "origin", "outcome", "state"] }
+  ]
+}
+```
+
+## Examples
+
+```bash
+# Default 7-day overview: calls by day×outcome, plus conversation volume
+curl -X POST https://platform-api.sophy.co/api/analytics/{project_id}/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "queries": [
+      {"name": "calls_by_outcome", "source": "calls", "step": "day", "group_by": ["outcome"], "measures": ["count", "talk_sec"]},
+      {"name": "conversations_by_day", "source": "conversations", "step": "day", "group_by": [], "measures": ["count"]}
+    ]
+  }'
+
+# Top 6 agents by average handle time, explicit range and timezone
+curl -X POST https://platform-api.sophy.co/api/analytics/{project_id}/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "timezone": "Europe/Istanbul",
+    "range": {"from": "2026-08-20T00:00:00Z", "to": "2026-09-19T23:59:59Z"},
+    "queries": [
+      {"name": "duration_by_agent", "source": "calls", "step": "day", "group_by": ["agent"], "measures": ["avg_duration_sec"], "top_n": 6}
+    ]
+  }'
+```
