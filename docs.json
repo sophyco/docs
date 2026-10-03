@@ -79,7 +79,9 @@
               "api-reference/endpoint/create-project",
               "api-reference/endpoint/get-project",
               "api-reference/endpoint/update-project",
-              "api-reference/endpoint/delete-project"
+              "api-reference/endpoint/delete-project",
+              "api-reference/endpoint/get-project-settings",
+              "api-reference/endpoint/update-project-settings"
             ]
           },
           {
@@ -90,6 +92,7 @@
               "api-reference/endpoint/toggle-transcript-star",
               "api-reference/endpoint/set-transcript-labels",
               "api-reference/endpoint/list-transcript-labels",
+              "api-reference/endpoint/queue-transcript-labeling",
               "api-reference/endpoint/get-dialogues"
             ]
           },
@@ -102,6 +105,19 @@
               "api-reference/endpoint/get-call-summary",
               "api-reference/endpoint/get-number-history",
               "api-reference/endpoint/replay-call-report"
+            ]
+          },
+          {
+            "group": "Messaging",
+            "pages": [
+              "api-reference/endpoint/send-conversation-message",
+              "api-reference/endpoint/send-channel-message"
+            ]
+          },
+          {
+            "group": "Analytics",
+            "pages": [
+              "api-reference/endpoint/batch-analytics"
             ]
           },
           {

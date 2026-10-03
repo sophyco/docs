@@ -40,9 +40,19 @@ Retrieve the turn-by-turn conversation of a call — the voice counterpart of [L
 ### Response fields
 
 - `transcript` (string): The whole conversation as flat text, handy when you just want to display or search it
-- `results[].role` (string): `system`, `bot` or `user`
-- `results[].secondsFromStart` (number): Offset from the start of the call — use it to line turns up with the recording
+- `results[].role` (string): `system`, `bot` or `user` — see the warning below
+- `results[].message` (string): The spoken text of the turn
+- `results[].secondsFromStart` (number, **seconds**): Offset from the start of the call — use it to line turns up with the recording
+- `results[].duration` (number, **milliseconds**): Length of the turn. The two fields use different units; this is the provider's own data, passed through unchanged
+- `results[].time` / `endTime` (number): Epoch milliseconds
 - `count` (integer): Total turns, ignoring `offset`/`limit`
+
+<Warning>
+**Skip `role: "system"` turns when rendering.** The first turn is usually the system
+turn, and it carries the agent's entire system prompt — thousands of characters of
+internal configuration that should never appear in a customer-facing view. Render only
+`bot` (the assistant) and `user` (the caller).
+</Warning>
 
 Turns are returned in the order they happened. A call with no stored report returns `count: 0` and an empty `results`.
 

@@ -5,6 +5,54 @@ info:
   description: REST API for authentication, token management, and transcript/dialogue
     retrieval
 paths:
+  /api/analytics/{project_id}/:
+    post:
+      operationId: analytics_batch
+      description: |-
+        Run a batch of independent aggregation queries against a project's
+        calls / conversations / campaigns in one request. Structural and
+        semantic errors are validated for the WHOLE batch up front (a single
+        400 listing every accepted-values set); once that passes, each query
+        runs independently — one query's runtime failure becomes an `error`
+        field in its own result slot, not a failed batch.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - analytics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsValidationError'
+          description: ''
   /api/auth/login/:
     post:
       operationId: auth_login_create
@@ -495,18 +543,34 @@ paths:
       - in: query
         name: agent_id
         schema:
+          type: integer
+        description: AI agent's numeric id.
+      - in: query
+        name: agent_name
+        schema:
           type: string
-          format: uuid
+        description: Agent name, case-insensitive substring. Use this when the UI
+          has a name rather than an id.
       - in: query
         name: campaign_id
         schema:
           type: string
           format: uuid
       - in: query
+        name: campaign_name
+        schema:
+          type: string
+        description: Campaign name, case-insensitive substring.
+      - in: query
         name: channel_id
         schema:
           type: string
           format: uuid
+      - in: query
+        name: channel_name
+        schema:
+          type: string
+        description: Channel name, case-insensitive substring.
       - in: query
         name: contact_id
         schema:
@@ -517,11 +581,15 @@ paths:
         schema:
           type: string
           format: date-time
+        description: 'Inclusive lower bound on created_at — when the call was recorded.
+          Not started_at: a call that never connected has none, and would drop out
+          of the range entirely.'
       - in: query
         name: date_to
         schema:
           type: string
           format: date-time
+        description: Inclusive upper bound on created_at.
       - in: query
         name: direction
         schema:
@@ -757,20 +825,36 @@ paths:
         Python.
       parameters:
       - in: query
+        name: agent_name
+        schema:
+          type: string
+      - in: query
         name: campaign_id
         schema:
           type: string
           format: uuid
       - in: query
+        name: campaign_name
+        schema:
+          type: string
+      - in: query
+        name: channel_name
+        schema:
+          type: string
+      - in: query
         name: date_from
         schema:
           type: string
           format: date-time
+        description: 'Inclusive lower bound on created_at — when the call was recorded.
+          Not started_at: a call that never connected has none, and would drop out
+          of the range entirely.'
       - in: query
         name: date_to
         schema:
           type: string
           format: date-time
+        description: Inclusive upper bound on created_at.
       - in: query
         name: direction
         schema:
@@ -803,6 +887,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/CallSummary'
           description: ''
+  /api/calls/recordings/{filename}/:
+    get:
+      operationId: calls_recordings_retrieve
+      description: |-
+        Provider-independent, permanent recording link. The email link points here;
+        on click we mint a fresh short-lived signed URL for the private S3 object
+        (key reconstructed from the self-contained filename) and 302-redirect.
+
+        Public by design — security is the unguessable filename (contains the VAPI
+        call UUID). Used when a workflow's recording.link_from is the S3 destination.
+      parameters:
+      - in: path
+        name: filename
+        schema:
+          type: string
+        description: Self-contained recording filename ({call_id}_{ts}_{assistant_id}_{type}.wav)
+        required: true
+      tags:
+      - calls
+      security:
+      - {}
+      responses:
+        '302':
+          description: No response body
+        '404':
+          description: No response body
   /api/campaigns/{project_id}/:
     get:
       operationId: campaigns_list
@@ -974,6 +1084,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/OutboundMessageResult'
           description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
         '422':
           content:
             application/json:
@@ -1013,6 +1129,12 @@ paths:
       - jwtAuth: []
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
+        '400':
           content:
             application/json:
               schema:
@@ -1272,6 +1394,80 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/organizations/{organization_id}/projects/{project_id}/settings/:
+    get:
+      operationId: organizations_projects_settings_retrieve
+      description: Read or upsert one project's Mongo-backed runtime settings.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSettings'
+          description: ''
+    put:
+      operationId: organizations_projects_settings_update
+      description: Read or upsert one project's Mongo-backed runtime settings.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSettings'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSettings'
+          description: ''
   /api/platforms/embed/configs/:
     get:
       operationId: platforms_embed_configs_list
@@ -1571,6 +1767,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedTranscriptList'
+          description: ''
+  /api/transcripts/{project_id}/{transcript_id}/label/:
+    post:
+      operationId: transcripts_label_create
+      description: Queue one explicitly requested transcript-labeling run.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - transcripts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transcript'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Transcript'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Transcript'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueTranscriptLabelingResponse'
           description: ''
   /api/transcripts/{project_id}/{transcript_id}/labels/:
     patch:
@@ -1876,6 +2112,118 @@ components:
       description: |-
         * `individual` - Individual
         * `business` - Business
+    AnalyticsCapabilities:
+      type: object
+      properties:
+        calls:
+          type: boolean
+        conversations:
+          type: boolean
+        campaigns:
+          type: boolean
+      required:
+      - calls
+      - campaigns
+      - conversations
+    AnalyticsQuery:
+      type: object
+      properties:
+        name:
+          type: string
+        source:
+          type: string
+        step:
+          type: string
+          nullable: true
+        group_by:
+          type: array
+          items:
+            type: string
+        measures:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        filters:
+          type: object
+          additionalProperties: {}
+        top_n:
+          type: integer
+          minimum: 1
+          nullable: true
+      required:
+      - measures
+      - name
+      - source
+    AnalyticsRequest:
+      type: object
+      description: |-
+        Shape only — every semantic/enum check (is `source` known, is a
+        `group_by` member valid for that source, ...) lives in
+        analytics/services/query.py:validate_request(), not here, since the
+        valid sets are source-dependent rather than a fixed choice list.
+      properties:
+        timezone:
+          type: string
+          nullable: true
+        range:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        queries:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsQuery'
+      required:
+      - queries
+    AnalyticsResponse:
+      type: object
+      properties:
+        timezone:
+          type: string
+        range:
+          type: object
+          additionalProperties: {}
+        capabilities:
+          $ref: '#/components/schemas/AnalyticsCapabilities'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsResult'
+      required:
+      - capabilities
+      - range
+      - results
+      - timezone
+    AnalyticsResult:
+      type: object
+      properties:
+        name:
+          type: string
+        group_by:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        error:
+          type: string
+          nullable: true
+      required:
+      - name
+    AnalyticsValidationError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - errors
     BackendEnum:
       enum:
       - native
@@ -2008,26 +2356,28 @@ components:
           type: string
           format: date-time
           nullable: true
+        last_attempt_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: 'When we actually reached or last attempted this call: started_at
+            if it connected, else ended_at (set even when a call never connects —
+            see Call.mark_failed/mark_cancelled), else created_at as the final fallback.
+            Matches the list''s sort order.'
         duration_sec:
           type: number
           format: double
-          nullable: true
-        cost:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
           nullable: true
         recording_url:
           type: string
           format: uri
           nullable: true
-          maxLength: 2048
+          readOnly: true
         has_recording:
           type: boolean
           readOnly: true
         has_report:
           type: boolean
-          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -2036,10 +2386,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-        report_id:
-          type: string
-          nullable: true
-          maxLength: 64
         structured_output: {}
         vars_snapshot: {}
         report:
@@ -2058,10 +2404,11 @@ components:
       - created_at
       - direction
       - has_recording
-      - has_report
       - id
+      - last_attempt_at
       - origin
       - project_id
+      - recording_url
       - report
       - run_id
       - structured_output
@@ -2161,26 +2508,32 @@ components:
           type: string
           format: date-time
           nullable: true
+        last_attempt_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: 'When we actually reached or last attempted this call: started_at
+            if it connected, else ended_at (set even when a call never connects —
+            see Call.mark_failed/mark_cancelled), else created_at as the final fallback.
+            Matches the list''s sort order.'
         duration_sec:
           type: number
           format: double
           nullable: true
-        cost:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
-          nullable: true
         recording_url:
           type: string
           format: uri
+          readOnly: true
           nullable: true
-          maxLength: 2048
+          description: Sophy-hosted recording link, playable directly (it redirects
+            to a freshly signed URL for our stored copy). Null when we hold no copy
+            of the audio — the provider's own URL is never returned, as it expires
+            and needs an API key.
         has_recording:
           type: boolean
           readOnly: true
         has_report:
           type: boolean
-          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -2200,10 +2553,11 @@ components:
       - created_at
       - direction
       - has_recording
-      - has_report
       - id
+      - last_attempt_at
       - origin
       - project_id
+      - recording_url
       - run_id
       - updated_at
     CallMessage:
@@ -2281,8 +2635,6 @@ components:
         structured_outputs:
           type: object
           additionalProperties: {}
-        recording_url:
-          type: string
         recording_refs:
           type: array
           items:
@@ -2297,7 +2649,6 @@ components:
       - analysis
       - message_count
       - recording_refs
-      - recording_url
       - report_type
       - structured_outputs
       - transcript
@@ -2348,10 +2699,6 @@ components:
         total_talk_sec:
           type: number
           format: double
-        total_cost:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,4})?$
         first_call_at:
           type: string
           format: date-time
@@ -2448,7 +2795,10 @@ components:
         calling_window:
           readOnly: true
           nullable: true
-          description: null → inherit from channel.
+          description: 'Bu kampanyanın arama/gönderim saatleri, ör. {"start": "09:00",
+            "end": "20:00", "days": [1,2,3,4,5]} — days cron numaralandırması (Paz=0…Cmt=6),
+            yazılmazsa her gün. Pencere kapandığında kuyrukta kalan iş iptal edilir.
+            null → kısıt yok (kanala düşer).'
         timezone:
           type: string
           readOnly: true
@@ -2841,8 +3191,8 @@ components:
           type: string
           readOnly: true
         user:
-          type: object
-          additionalProperties: {}
+          allOf:
+          - $ref: '#/components/schemas/User'
           readOnly: true
       required:
       - access_token
@@ -2938,20 +3288,50 @@ components:
         * `api` - API
     OutboundMessageResult:
       type: object
+      description: |-
+        Public send result. Deliberately carries only fields we own — never the
+        provider's raw response — so switching providers can't change the API.
+        Every field is always present (null when not applicable).
       properties:
         conversation_id:
           type: string
+          nullable: true
+          description: Null only when a proactive send was refused before a conversation
+            was resolved.
         message_id:
           type: string
           nullable: true
+          description: The platform's message id (e.g. Chatdash/WhatsApp).
         success:
           type: boolean
-        raw: {}
+        type:
+          $ref: '#/components/schemas/TypeDffEnum'
+        template_name:
+          type: string
+          nullable: true
+          description: Null unless type='template'.
+        content:
+          type: string
+          nullable: true
+          description: 'What was sent: the text, the media URL, or for templates the
+            rendered body the customer sees.'
+        error:
+          type: string
+          nullable: true
+          description: Null when success=true.
         deduplicated:
           type: boolean
+          description: True when this client_message_id was already sent; the prior
+            result is returned.
       required:
+      - content
       - conversation_id
+      - deduplicated
+      - error
+      - message_id
       - success
+      - template_name
+      - type
     OutcomeEnum:
       enum:
       - answered
@@ -3440,6 +3820,44 @@ components:
       - organization_id
       - organization_name
       - updated_at
+    ProjectSettings:
+      type: object
+      properties:
+        projectID:
+          type: string
+          readOnly: true
+        api_key:
+          type: string
+          writeOnly: true
+        api_key_set:
+          type: boolean
+          readOnly: true
+        conversation_labeling:
+          type: object
+          additionalProperties: {}
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - api_key_set
+      - createdAt
+      - projectID
+      - updatedAt
+    QueueTranscriptLabelingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        task_id:
+          type: string
+      required:
+      - status
+      - task_id
     RefreshTokenRequest:
       type: object
       properties:
@@ -3454,6 +3872,16 @@ components:
           type: string
       required:
       - access_token
+    RoleEnum:
+      enum:
+      - owner
+      - admin
+      - agent
+      type: string
+      description: |-
+        * `owner` - Owner
+        * `admin` - Admin
+        * `agent` - Agent
     SavedCardToken:
       type: object
       description: |-
@@ -3579,6 +4007,59 @@ components:
         * `image` - image
         * `document` - document
         * `template` - template
+    User:
+      type: object
+      description: |-
+        Canonical user payload returned by login.
+
+        ``is_superuser`` / ``is_staff`` are platform-level flags (unrelated to the
+        org-scoped ``role``) and are read-only — they can only be granted from
+        Django admin, never through the API. They are also dropped from the payload
+        when false, so they only ship to the handful of accounts that hold them.
+        Consumers must treat an absent flag as false (fail closed).
+      properties:
+        id:
+          type: string
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        organization_ids:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+      required:
+      - id
+      - organization_ids
+      - username
     VersionIDEnum:
       enum:
       - production

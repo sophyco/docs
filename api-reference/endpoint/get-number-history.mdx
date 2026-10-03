@@ -56,6 +56,13 @@ This answers "who did we call, how many times, and did we ever reach them" in a 
 - `results` (array): The individual calls, newest first — same shape as [List Calls](/api-reference/endpoint/list-calls)
 - `count` (integer): Total calls on this number, ignoring `offset`/`limit`
 
+<Warning>
+The `number` in the path must match what is stored **exactly**. Numbers are kept as the
+provider supplied them, so `+905001234567` and `905001234567` are two different records.
+Pass through the `to_number` / `from_number` value from
+[List Calls](/api-reference/endpoint/list-calls) rather than composing one.
+</Warning>
+
 <Note>
 A number repeatedly dialed with `outbound_answered: 0` is usually worth acting on — it is an unreachable number the campaign keeps retrying.
 </Note>
