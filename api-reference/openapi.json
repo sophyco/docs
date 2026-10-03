@@ -1084,6 +1084,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/OutboundMessageResult'
           description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
         '422':
           content:
             application/json:
@@ -1123,6 +1129,12 @@ paths:
       - jwtAuth: []
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboundMessageResult'
+          description: ''
+        '400':
           content:
             application/json:
               schema:
@@ -1382,6 +1394,80 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/organizations/{organization_id}/projects/{project_id}/settings/:
+    get:
+      operationId: organizations_projects_settings_retrieve
+      description: Read or upsert one project's Mongo-backed runtime settings.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSettings'
+          description: ''
+    put:
+      operationId: organizations_projects_settings_update
+      description: Read or upsert one project's Mongo-backed runtime settings.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSettings'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSettings'
+          description: ''
   /api/platforms/embed/configs/:
     get:
       operationId: platforms_embed_configs_list
@@ -1681,6 +1767,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedTranscriptList'
+          description: ''
+  /api/transcripts/{project_id}/{transcript_id}/label/:
+    post:
+      operationId: transcripts_label_create
+      description: Queue one explicitly requested transcript-labeling run.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - transcripts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transcript'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Transcript'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Transcript'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueTranscriptLabelingResponse'
           description: ''
   /api/transcripts/{project_id}/{transcript_id}/labels/:
     patch:
@@ -3162,20 +3288,50 @@ components:
         * `api` - API
     OutboundMessageResult:
       type: object
+      description: |-
+        Public send result. Deliberately carries only fields we own — never the
+        provider's raw response — so switching providers can't change the API.
+        Every field is always present (null when not applicable).
       properties:
         conversation_id:
           type: string
+          nullable: true
+          description: Null only when a proactive send was refused before a conversation
+            was resolved.
         message_id:
           type: string
           nullable: true
+          description: The platform's message id (e.g. Chatdash/WhatsApp).
         success:
           type: boolean
-        raw: {}
+        type:
+          $ref: '#/components/schemas/TypeDffEnum'
+        template_name:
+          type: string
+          nullable: true
+          description: Null unless type='template'.
+        content:
+          type: string
+          nullable: true
+          description: 'What was sent: the text, the media URL, or for templates the
+            rendered body the customer sees.'
+        error:
+          type: string
+          nullable: true
+          description: Null when success=true.
         deduplicated:
           type: boolean
+          description: True when this client_message_id was already sent; the prior
+            result is returned.
       required:
+      - content
       - conversation_id
+      - deduplicated
+      - error
+      - message_id
       - success
+      - template_name
+      - type
     OutcomeEnum:
       enum:
       - answered
@@ -3664,6 +3820,44 @@ components:
       - organization_id
       - organization_name
       - updated_at
+    ProjectSettings:
+      type: object
+      properties:
+        projectID:
+          type: string
+          readOnly: true
+        api_key:
+          type: string
+          writeOnly: true
+        api_key_set:
+          type: boolean
+          readOnly: true
+        conversation_labeling:
+          type: object
+          additionalProperties: {}
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - api_key_set
+      - createdAt
+      - projectID
+      - updatedAt
+    QueueTranscriptLabelingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        task_id:
+          type: string
+      required:
+      - status
+      - task_id
     RefreshTokenRequest:
       type: object
       properties:
