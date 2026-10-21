@@ -1,0 +1,6 @@
+---
+title: 'Start Campaign Call'
+openapi: 'POST /api/v1/campaigns/{campaign_id}/calls/'
+---
+
+Start one confirmed call. By record id: send `lookup_key` and repeat it in `confirm_key`; the record is looked up again and what the source says now is dialed. From a form: send `number`, `variables` and the number's last four digits in `confirm_last4`. Send an `Idempotency-Key` header to make retries safe: the same key within 10 minutes returns the first result instead of dialing again. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.

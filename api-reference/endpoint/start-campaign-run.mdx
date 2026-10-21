@@ -1,0 +1,6 @@
+---
+title: 'Start Campaign Run'
+openapi: 'POST /api/v1/campaigns/{campaign_id}/runs/'
+---
+
+Start a confirmed batch of record ids as one manual run. The ids are looked up again and only callable ones are dialed; `confirm_count` must equal that number, otherwise the fresh results come back with `409 count_changed` for review. Supports `Idempotency-Key`. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.

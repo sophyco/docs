@@ -1,0 +1,6 @@
+---
+title: 'Preview Campaign'
+openapi: 'POST /api/v1/campaigns/{campaign_id}/preview/'
+---
+
+Dry run: who would be dialed, with which variables. Places no calls and creates no run. Pass `schedule_id` to preview under that schedule's eligibility rule. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.

@@ -1,0 +1,6 @@
+---
+title: 'List Campaigns'
+openapi: 'GET /api/v1/campaigns/'
+---
+
+List the project's campaigns as Studio's Outreach screen shows them: how each one can be started (`trigger_type`: `on_demand`, `scheduled`, `mixed` or `none`), its next scheduled run and today's activity. Archived campaigns are excluded unless `?archived=true`. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.

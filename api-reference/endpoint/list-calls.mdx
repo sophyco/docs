@@ -25,6 +25,8 @@ Inbound and outbound calls live in one list. Rows are intentionally lightweight:
 - `campaign_id` (string): Filter by campaign UUID
 - `run_id` (string): Filter by campaign run UUID
 - `contact_id` (string): Filter by contact UUID
+- `external_ref` (string): Filter by the customer record id a Studio-started call was placed for
+- `initiated_by` (integer): Filter by the user who confirmed and started the call in Studio
 - `platform_type` (string): Filter by platform (`vapi`, …)
 - `number` (string): Substring match against **either** number — the one dialed or the one calling
 - `date_from` / `date_to` (datetime, ISO 8601): Bound `started_at`
