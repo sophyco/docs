@@ -2047,12 +2047,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       tags:
       - v1
       requestBody:
@@ -2090,12 +2090,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: agent_id
         schema:
@@ -2211,12 +2211,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: call_id
         schema:
@@ -2243,12 +2243,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: call_id
         schema:
@@ -2289,12 +2289,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: call_id
         schema:
@@ -2339,12 +2339,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: limit
         schema:
@@ -2379,12 +2379,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: agent_name
         schema:
@@ -2448,12 +2448,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       tags:
       - v1
       security:
@@ -2475,12 +2475,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2509,12 +2509,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: header
         name: Idempotency-Key
         schema:
@@ -2558,12 +2558,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2602,12 +2602,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2652,12 +2652,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: header
         name: Idempotency-Key
         schema:
@@ -2702,12 +2702,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2740,12 +2740,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2772,12 +2772,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2804,12 +2804,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: conversationID
         schema:
@@ -2865,12 +2865,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: transcript_id
         schema:
@@ -2907,12 +2907,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: transcript_id
         schema:
@@ -2949,12 +2949,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: transcript_id
         schema:
@@ -2991,12 +2991,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: transcript_id
         schema:
@@ -3033,12 +3033,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: conversationID
         schema:
@@ -3094,12 +3094,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       tags:
       - v1
       security:
