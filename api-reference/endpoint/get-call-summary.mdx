@@ -10,7 +10,7 @@ Accepts the same filters as [List Calls](/api-reference/endpoint/list-calls), so
 ## Query Parameters
 
 - `group_by` (string): `day`, `outcome`, `state`, `channel` or `campaign`. Omit for totals only
-- `date_from` / `date_to` (datetime, ISO 8601): Bound `started_at`
+- `date_from` / `date_to` (datetime, ISO 8601): Inclusive bounds on `created_at` — when the call was recorded. Not `started_at`: a call that never connected has none and would drop out of the range
 - `direction` (string): `inbound` or `outbound`
 - `origin` (string): `inbound`, `campaign`, `manual` or `api`
 - `campaign_id` (string): Restrict to one campaign

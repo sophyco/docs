@@ -3,4 +3,4 @@ title: 'Preview Campaign'
 openapi: 'POST /api/v1/campaigns/{campaign_id}/preview/'
 ---
 
-Dry run: who would be dialed, with which variables. Places no calls and creates no run. Pass `schedule_id` to preview under that schedule's eligibility rule. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
+Dry run: who would be dialed, with which variables. Places no calls and creates no run. Pass `schedule_id` to preview under that schedule's eligibility rule; omit it to preview everyone in the pivot. The pivot is re-synced from the source first — pass `sync=false` to preview the pivot as it is (a failed sync returns `502`). The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
