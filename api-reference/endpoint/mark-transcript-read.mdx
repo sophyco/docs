@@ -1,13 +1,12 @@
 ---
 title: 'Mark Transcript as Read'
-openapi: 'patch /api/transcripts/{project_id}/{transcript_id}/read/'
+openapi: 'patch /api/v1/transcripts/{transcript_id}/read/'
 ---
 
-Mark a transcript as read for the authenticated user. Each user's read status is tracked independently — marking a transcript as read does not affect other users.
+Mark a transcript as read for the authenticated user. Each user's read status is tracked independently — marking a transcript as read does not affect other users. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 ## Path Parameters
 
-- `project_id` (string, required): Project UUID
 - `transcript_id` (string, required): Transcript ID
 
 ## Response
@@ -40,11 +39,12 @@ Returns the updated transcript object with `unread: false` for the current user.
 ## Notes
 
 - Calling this endpoint multiple times is safe — it is idempotent.
-- To retrieve unread transcripts for the current user, use `GET /api/transcripts/{project_id}/?unread=true`.
+- To retrieve unread transcripts for the current user, use `GET /api/v1/transcripts/?unread=true`.
 
 ## Example
 
 ```bash
-curl -X PATCH https://platform-api.sophy.co/api/transcripts/{project_id}/{transcript_id}/read/ \
-  -H "Authorization: Bearer suk_..."
+curl -X PATCH https://platform-api.sophy.co/api/v1/transcripts/{transcript_id}/read/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 ```

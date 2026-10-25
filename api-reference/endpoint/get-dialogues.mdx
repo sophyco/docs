@@ -1,13 +1,9 @@
 ---
 title: 'List Dialogues'
-openapi: 'GET /api/transcripts/{project_id}/dialogues/'
+openapi: 'GET /api/v1/transcripts/dialogues/'
 ---
 
-Retrieve the individual messages (dialogues) of a conversation, with optional filtering and pagination.
-
-## Path Parameters
-
-- `project_id` (string, required): Project UUID
+Retrieve the individual messages (dialogues) of a conversation, with optional filtering and pagination. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 ## Query Parameters
 
@@ -97,18 +93,22 @@ not exposed by this endpoint.
 
 ```bash
 # All dialogues of a conversation
-curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/dialogues/?conversationID={conversation_id}" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/transcripts/dialogues/?conversationID={conversation_id}" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Completed messages only
-curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/dialogues/?conversationID={conversation_id}&status=completed" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/transcripts/dialogues/?conversationID={conversation_id}&status=completed" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # User messages only
-curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/dialogues/?conversationID={conversation_id}&role=user" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/transcripts/dialogues/?conversationID={conversation_id}&role=user" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Second page of 50
-curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/dialogues/?conversationID={conversation_id}&offset=50&limit=50" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/transcripts/dialogues/?conversationID={conversation_id}&offset=50&limit=50" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 ```

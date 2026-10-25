@@ -71,11 +71,13 @@ revoke_token(old_token_id)
 Filter on API side when possible:
 ```bash
 # ✅ Good: Filter on API
-curl "http://localhost:8000/api/transcripts/{projectId}/?platform=whatsapp"
+curl "https://platform-api.sophy.co/api/v1/transcripts/?platform=whatsapp" \
+  -H "Sophy-Project: {project_id}"
 
 # ❌ Bad: Fetch all, filter locally
-curl "http://localhost:8000/api/transcripts/{projectId}/" | \
-  jq '.[] | select(.platform == "whatsapp")'
+curl "https://platform-api.sophy.co/api/v1/transcripts/" \
+  -H "Sophy-Project: {project_id}" | \
+  jq '.results[] | select(.platform == "whatsapp")'
 ```
 
 ### 2. Batch Operations
@@ -121,8 +123,8 @@ class CachedSophyClient:
         
         # Fetch from API
         response = requests.get(
-            f"http://localhost:8000/api/transcripts/{project_id}/",
-            headers={"Authorization": f"Bearer {self.token}"}
+            "https://platform-api.sophy.co/api/v1/transcripts/",
+            headers={"Authorization": f"Bearer {self.token}", "Sophy-Project": project_id}
         )
         data = response.json()
         
@@ -131,15 +133,15 @@ class CachedSophyClient:
         return data
 ```
 
-### 4. Pagination (Future)
+### 4. Pagination
 
-When pagination is implemented:
+List endpoints page with `offset` / `limit` (default `100`, max `1000`) and return `count`, so you know when to stop:
 ```bash
-# Get first page
-curl "...?page=1&page_size=50"
+# First page
+curl "...?offset=0&limit=50"
 
-# Get next page
-curl "...?page=2&page_size=50"
+# Next page — keep going while offset < count
+curl "...?offset=50&limit=50"
 ```
 
 ---
@@ -272,9 +274,11 @@ class SophyServiceClient:
         self.service_key = service_key
     
     def get_conversation_data(self, conversation_id):
+        # A service key bound to a project needs no Sophy-Project header
         return requests.get(
-            f"http://localhost:8000/api/transcripts/{conversation_id}/",
-            headers={"Authorization": f"Bearer {self.service_key}"}
+            "https://platform-api.sophy.co/api/v1/transcripts/dialogues/",
+            headers={"Authorization": f"Bearer {self.service_key}"},
+            params={"conversationID": conversation_id},
         ).json()
 ```
 
@@ -360,13 +364,15 @@ class TestSophyIntegration(unittest.TestCase):
 
 ```bash
 # Using Apache Bench
-ab -n 1000 -c 10 -H "Authorization: Bearer suk_..." \
-  http://localhost:8000/api/transcripts/PROJECT_ID/
+# Point load tests at test, never production
+ab -n 1000 -c 10 -H "Authorization: Bearer suk_..." -H "Sophy-Project: PROJECT_ID" \
+  https://test-platform-api.sophy.co/api/v1/transcripts/
 
 # Using wrk
 wrk -t12 -c400 -d30s \
   -H "Authorization: Bearer suk_..." \
-  http://localhost:8000/api/transcripts/PROJECT_ID/
+  -H "Sophy-Project: PROJECT_ID" \
+  https://test-platform-api.sophy.co/api/v1/transcripts/
 ```
 
 ---

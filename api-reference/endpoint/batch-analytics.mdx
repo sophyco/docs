@@ -1,13 +1,9 @@
 ---
 title: 'Batch Analytics'
-openapi: 'POST /api/analytics/{project_id}/'
+openapi: 'POST /api/v1/analytics/'
 ---
 
-Run several independent aggregation queries against a project's calls, conversations and campaigns in one request. A new chart on a dashboard is a new entry in `queries[]`, never a new endpoint — mirrors [Get Call Summary](/api-reference/endpoint/get-call-summary) but batched, two-dimensional (time bucket × one grouping dimension), and spanning all three sources in a single response.
-
-## Path Parameters
-
-- `project_id` (string, required): Project UUID
+Run several independent aggregation queries against a project's calls, conversations and campaigns in one request. A new chart on a dashboard is a new entry in `queries[]`, never a new endpoint — mirrors [Get Call Summary](/api-reference/endpoint/get-call-summary) but batched, two-dimensional (time bucket × one grouping dimension), and spanning all three sources in a single response. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 ## Request Body
 
@@ -79,8 +75,9 @@ A structural problem (unknown `source`/`step`/`group_by`/`measure`/`filter`, `ra
 
 ```bash
 # Default 7-day overview: calls by day×outcome, plus conversation volume
-curl -X POST https://platform-api.sophy.co/api/analytics/{project_id}/ \
+curl -X POST https://platform-api.sophy.co/api/v1/analytics/ \
   -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}" \
   -H "Content-Type: application/json" \
   -d '{
     "queries": [
@@ -90,8 +87,9 @@ curl -X POST https://platform-api.sophy.co/api/analytics/{project_id}/ \
   }'
 
 # Top 6 agents by average handle time, explicit range and timezone
-curl -X POST https://platform-api.sophy.co/api/analytics/{project_id}/ \
+curl -X POST https://platform-api.sophy.co/api/v1/analytics/ \
   -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}" \
   -H "Content-Type: application/json" \
   -d '{
     "timezone": "Europe/Istanbul",

@@ -1,13 +1,12 @@
 ---
 title: 'Set Transcript Labels'
-openapi: 'patch /api/transcripts/{project_id}/{transcript_id}/labels/'
+openapi: 'patch /api/v1/transcripts/{transcript_id}/labels/'
 ---
 
-Replace the labels on a transcript. Sending an empty array clears all labels.
+Replace the labels on a transcript. Sending an empty array clears all labels. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 ## Path Parameters
 
-- `project_id` (string, required): Project UUID
 - `transcript_id` (string, required): Transcript ID
 
 ## Request Body
@@ -47,14 +46,15 @@ Returns the updated transcript object with the new `labels` array.
 ## Notes
 
 - Labels are free-form strings scoped to the project. There is no predefined list.
-- To fetch all labels used in a project (for autocomplete), use `GET /api/transcripts/{project_id}/labels/`.
-- To filter transcripts by label, use `GET /api/transcripts/{project_id}/?label=VIP`.
+- To fetch all labels used in a project (for autocomplete), use `GET /api/v1/transcripts/labels/`.
+- To filter transcripts by label, use `GET /api/v1/transcripts/?label=VIP`.
 
 ## Example
 
 ```bash
-curl -X PATCH https://platform-api.sophy.co/api/transcripts/{project_id}/{transcript_id}/labels/ \
+curl -X PATCH https://platform-api.sophy.co/api/v1/transcripts/{transcript_id}/labels/ \
   -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}" \
   -H "Content-Type: application/json" \
   -d '{"labels": ["VIP", "Şikayet"]}'
 ```

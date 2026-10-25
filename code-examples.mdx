@@ -1,5 +1,15 @@
 # Code Examples
 
+Every example below talks to production. Swap `BASE_URL` to target another environment:
+
+| Environment | Base URL |
+| --- | --- |
+| Production | `https://platform-api.sophy.co` |
+| Test | `https://test-platform-api.sophy.co` |
+| Local | `http://localhost:8000` |
+
+Project-scoped endpoints (`/api/v1/…`) take the project from the `Sophy-Project` header. An API key bound to a project carries its project, so the header can be left out.
+
 ## Python
 
 ### Installation
@@ -12,22 +22,18 @@ pip install requests
 
 ```python
 import requests
-import json
 
-TOKEN = "suk_f8fV8YTM76Ly08tixxpfZAsrwzIUms3xzdtCBHlcgvNNsHZtStVDPbgwnXamj0feC4YJt7y3Y5wIXfNya5rHzU1ON-X6mL38Sv25kc4IizMeKyH3m8_KAghp077GZu-W"
+TOKEN = "suk_..."
 PROJECT_ID = "be02a6b2-0061-4849-983b-26504bde1144"
-BASE_URL = "http://localhost:8000"
+BASE_URL = "https://platform-api.sophy.co"
 
 headers = {
     "Authorization": f"Bearer {TOKEN}",
-    "Content-Type": "application/json"
+    "Sophy-Project": PROJECT_ID,
 }
 
 # Get transcripts
-response = requests.get(
-    f"{BASE_URL}/api/transcripts/{PROJECT_ID}/",
-    headers=headers
-)
+response = requests.get(f"{BASE_URL}/api/v1/transcripts/", headers=headers)
 print(response.json())
 ```
 
@@ -36,15 +42,14 @@ print(response.json())
 ```python
 import requests
 
+BASE_URL = "https://platform-api.sophy.co"
+
 login_data = {
     "username": "sophyadmin",
     "password": "password123"
 }
 
-response = requests.post(
-    "http://localhost:8000/api/auth/login/",
-    json=login_data
-)
+response = requests.post(f"{BASE_URL}/api/auth/login/", json=login_data)
 
 if response.status_code == 200:
     token = response.json()["token"]
@@ -59,10 +64,9 @@ else:
 import requests
 
 TOKEN = "suk_..."
-headers = {
-    "Authorization": f"Bearer {TOKEN}",
-    "Content-Type": "application/json"
-}
+BASE_URL = "https://platform-api.sophy.co"
+
+headers = {"Authorization": f"Bearer {TOKEN}"}
 
 token_data = {
     "type": "service",
@@ -70,11 +74,7 @@ token_data = {
     "expires_at": "2026-12-31T23:59:59Z"
 }
 
-response = requests.post(
-    "http://localhost:8000/api/auth/tokens/",
-    json=token_data,
-    headers=headers
-)
+response = requests.post(f"{BASE_URL}/api/auth/tokens/", json=token_data, headers=headers)
 
 new_token = response.json()
 print(f"Created token: {new_token['token']}")
@@ -84,58 +84,59 @@ print(f"Created token: {new_token['token']}")
 
 ```python
 import requests
-from datetime import datetime, timedelta
 
 TOKEN = "suk_..."
 PROJECT_ID = "be02a6b2-0061-4849-983b-26504bde1144"
+BASE_URL = "https://platform-api.sophy.co"
 
-headers = {"Authorization": f"Bearer {TOKEN}"}
+headers = {"Authorization": f"Bearer {TOKEN}", "Sophy-Project": PROJECT_ID}
 
 # Get WhatsApp transcripts
-params = {"platform": "whatsapp"}
 response = requests.get(
-    f"http://localhost:8000/api/transcripts/{PROJECT_ID}/",
+    f"{BASE_URL}/api/v1/transcripts/",
     headers=headers,
-    params=params
+    params={"platform": "whatsapp"},
 )
 
-transcripts = response.json()
-for transcript in transcripts:
+page = response.json()
+for transcript in page["results"]:
     print(f"{transcript['user']['name']} - {transcript['platform']}")
 ```
 
 ### Batch Processing
 
+List endpoints return a page (`count`, `offset`, `limit`, `results`). Walk `offset` until you have `count` items.
+
 ```python
 import requests
-import time
 
 TOKEN = "suk_..."
 PROJECT_ID = "be02a6b2-0061-4849-983b-26504bde1144"
+BASE_URL = "https://platform-api.sophy.co"
 
-headers = {"Authorization": f"Bearer {TOKEN}"}
+headers = {"Authorization": f"Bearer {TOKEN}", "Sophy-Project": PROJECT_ID}
 
-def fetch_all_dialogues():
-    """Fetch all dialogues from a project"""
-    response = requests.get(
-        f"http://localhost:8000/api/transcripts/{PROJECT_ID}/dialogues/",
-        headers=headers
-    )
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Error: {response.status_code}")
-        return None
+def fetch_all_dialogues(conversation_id, limit=500):
+    """Fetch every dialogue of one conversation, page by page."""
+    offset, dialogues = 0, []
+    while True:
+        response = requests.get(
+            f"{BASE_URL}/api/v1/transcripts/dialogues/",
+            headers=headers,
+            params={"conversationID": conversation_id, "offset": offset, "limit": limit},
+        )
+        response.raise_for_status()
+        page = response.json()
+        dialogues.extend(page["results"])
+        offset += limit
+        if offset >= page["count"]:
+            return dialogues
 
-# Process dialogues
-dialogues = fetch_all_dialogues()
-if dialogues:
-    for dialogue in dialogues:
-        if dialogue["role"] == "user":
-            print(f"User message: {dialogue['message']}")
-        elif dialogue["role"] == "assistant":
-            print(f"AI response: {dialogue['message']}")
+for dialogue in fetch_all_dialogues("conversation-id"):
+    if dialogue["role"] == "user":
+        print(f"User message: {dialogue['message']}")
+    elif dialogue["role"] == "assistant":
+        print(f"AI response: {dialogue['message']}")
 ```
 
 ---
@@ -155,15 +156,15 @@ const axios = require('axios');
 
 const TOKEN = "suk_...";
 const PROJECT_ID = "be02a6b2-0061-4849-983b-26504bde1144";
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "https://platform-api.sophy.co";
 
 const headers = {
   "Authorization": `Bearer ${TOKEN}`,
-  "Content-Type": "application/json"
+  "Sophy-Project": PROJECT_ID
 };
 
 // Get transcripts
-axios.get(`${BASE_URL}/api/transcripts/${PROJECT_ID}/`, { headers })
+axios.get(`${BASE_URL}/api/v1/transcripts/`, { headers })
   .then(res => console.log(res.data))
   .catch(err => console.error(err.response.data));
 ```
@@ -173,12 +174,14 @@ axios.get(`${BASE_URL}/api/transcripts/${PROJECT_ID}/`, { headers })
 ```javascript
 const axios = require('axios');
 
+const BASE_URL = "https://platform-api.sophy.co";
+
 const loginData = {
   username: "sophyadmin",
   password: "password123"
 };
 
-axios.post("http://localhost:8000/api/auth/login/", loginData)
+axios.post(`${BASE_URL}/api/auth/login/`, loginData)
   .then(res => {
     const token = res.data.token;
     console.log(`Token: ${token}`);
@@ -193,16 +196,17 @@ const axios = require('axios');
 
 const TOKEN = "suk_...";
 const PROJECT_ID = "be02a6b2-0061-4849-983b-26504bde1144";
+const BASE_URL = "https://platform-api.sophy.co";
 
-const headers = { "Authorization": `Bearer ${TOKEN}` };
+const headers = { "Authorization": `Bearer ${TOKEN}`, "Sophy-Project": PROJECT_ID };
 
-// Get completed dialogues
-axios.get(`http://localhost:8000/api/transcripts/${PROJECT_ID}/dialogues/`, {
+// Completed user messages of one conversation
+axios.get(`${BASE_URL}/api/v1/transcripts/dialogues/`, {
   headers,
-  params: { status: "completed", role: "user" }
+  params: { conversationID: "conversation-id", status: "completed", role: "user" }
 })
   .then(res => {
-    res.data.forEach(dialogue => {
+    res.data.results.forEach(dialogue => {
       console.log(`${dialogue.role}: ${dialogue.message}`);
     });
   })
@@ -213,19 +217,20 @@ axios.get(`http://localhost:8000/api/transcripts/${PROJECT_ID}/dialogues/`, {
 
 ```javascript
 class SophyAPIClient {
-  constructor(token, baseUrl = "http://localhost:8000") {
-    this.token = token;
+  constructor(token, projectId, baseUrl = "https://platform-api.sophy.co") {
     this.baseUrl = baseUrl;
     this.headers = {
       "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json"
     };
+    // Omit projectId when the API key is bound to a project.
+    if (projectId) this.headers["Sophy-Project"] = projectId;
   }
 
-  async getTranscripts(projectId, filters = {}) {
+  async getTranscripts(filters = {}) {
     try {
       const response = await axios.get(
-        `${this.baseUrl}/api/transcripts/${projectId}/`,
+        `${this.baseUrl}/api/v1/transcripts/`,
         { headers: this.headers, params: filters }
       );
       return response.data;
@@ -235,11 +240,11 @@ class SophyAPIClient {
     }
   }
 
-  async getDialogues(projectId, filters = {}) {
+  async getDialogues(conversationId, filters = {}) {
     try {
       const response = await axios.get(
-        `${this.baseUrl}/api/transcripts/${projectId}/dialogues/`,
-        { headers: this.headers, params: filters }
+        `${this.baseUrl}/api/v1/transcripts/dialogues/`,
+        { headers: this.headers, params: { conversationID: conversationId, ...filters } }
       );
       return response.data;
     } catch (error) {
@@ -263,20 +268,26 @@ class SophyAPIClient {
   }
 }
 
-// Usage
-const client = new SophyAPIClient("suk_...");
-client.getTranscripts("project-id", { platform: "whatsapp" })
-  .then(transcripts => console.log(transcripts));
+// Usage — pass a third argument to target test or local
+const client = new SophyAPIClient("suk_...", "project-id");
+client.getTranscripts({ platform: "whatsapp" })
+  .then(page => console.log(page.results));
 ```
 
 ---
 
 ## cURL
 
+```bash
+BASE_URL="https://platform-api.sophy.co"   # or https://test-platform-api.sophy.co, http://localhost:8000
+TOKEN="suk_..."
+PROJECT_ID="be02a6b2-0061-4849-983b-26504bde1144"
+```
+
 ### Login
 
 ```bash
-curl -X POST http://localhost:8000/api/auth/login/ \
+curl -X POST ${BASE_URL}/api/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
     "username": "sophyadmin",
@@ -287,18 +298,14 @@ curl -X POST http://localhost:8000/api/auth/login/ \
 ### List Tokens
 
 ```bash
-TOKEN="suk_..."
-
-curl -X GET http://localhost:8000/api/auth/tokens/ \
+curl -X GET ${BASE_URL}/api/auth/tokens/ \
   -H "Authorization: Bearer ${TOKEN}" | jq .
 ```
 
 ### Create Token
 
 ```bash
-TOKEN="suk_..."
-
-curl -X POST http://localhost:8000/api/auth/tokens/ \
+curl -X POST ${BASE_URL}/api/auth/tokens/ \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -311,21 +318,17 @@ curl -X POST http://localhost:8000/api/auth/tokens/ \
 ### Get Transcripts
 
 ```bash
-TOKEN="suk_..."
-PROJECT_ID="be02a6b2-0061-4849-983b-26504bde1144"
-
-curl -X GET "http://localhost:8000/api/transcripts/${PROJECT_ID}/?platform=whatsapp" \
-  -H "Authorization: Bearer ${TOKEN}" | jq .
+curl -X GET "${BASE_URL}/api/v1/transcripts/?platform=whatsapp" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Sophy-Project: ${PROJECT_ID}" | jq .
 ```
 
 ### Get Dialogues
 
 ```bash
-TOKEN="suk_..."
-PROJECT_ID="be02a6b2-0061-4849-983b-26504bde1144"
-
-curl -X GET "http://localhost:8000/api/transcripts/${PROJECT_ID}/dialogues/?status=completed" \
-  -H "Authorization: Bearer ${TOKEN}" | jq .
+curl -X GET "${BASE_URL}/api/v1/transcripts/dialogues/?conversationID={conversation_id}&status=completed" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Sophy-Project: ${PROJECT_ID}" | jq .
 ```
 
 ### Using jq for JSON parsing
@@ -335,13 +338,13 @@ curl -X GET "http://localhost:8000/api/transcripts/${PROJECT_ID}/dialogues/?stat
 curl ... | jq .
 
 # Select specific fields
-curl ... | jq '.[].message'
+curl ... | jq '.results[].message'
 
 # Filter
-curl ... | jq '.[] | select(.status == "completed")'
+curl ... | jq '.results[] | select(.status == "completed")'
 
 # Map
-curl ... | jq 'map({role: .role, message: .message})'
+curl ... | jq '.results | map({role: .role, message: .message})'
 ```
 
 ---
@@ -349,10 +352,12 @@ curl ... | jq 'map({role: .role, message: .message})'
 ## Postman
 
 1. **Create Collection** → "Sophy API"
-2. **Add Environment Variable:**
+2. **Add one environment per server** (Production, Test, Local), each with:
    - `token`: suk_...
-   - `base_url`: http://localhost:8000
+   - `base_url`: `https://platform-api.sophy.co`, `https://test-platform-api.sophy.co` or `http://localhost:8000`
    - `project_id`: be02a6b2-0061-4849-983b-26504bde1144
+
+   Switching the active environment switches the server.
 
 3. **Request Examples:**
 
@@ -368,9 +373,10 @@ Body (JSON):
 
 **List Transcripts:**
 ```
-GET {{base_url}}/api/transcripts/{{project_id}}/
+GET {{base_url}}/api/v1/transcripts/
 Headers:
 - Authorization: Bearer {{token}}
+- Sophy-Project: {{project_id}}
 ```
 
 **Create Token:**

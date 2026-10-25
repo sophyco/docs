@@ -1,13 +1,12 @@
 ---
 title: 'Toggle Transcript Star'
-openapi: 'patch /api/transcripts/{project_id}/{transcript_id}/star/'
+openapi: 'patch /api/v1/transcripts/{transcript_id}/star/'
 ---
 
-Toggle the star (favourite) status of a transcript for the authenticated user. Each user has their own independent star list — starring a transcript does not affect other users.
+Toggle the star (favourite) status of a transcript for the authenticated user. Each user has their own independent star list — starring a transcript does not affect other users. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 ## Path Parameters
 
-- `project_id` (string, required): Project UUID
 - `transcript_id` (string, required): Transcript ID
 
 ## Response
@@ -37,11 +36,12 @@ Returns the updated transcript object with the new `starred` value for the curre
 ## Notes
 
 - This endpoint is a toggle: calling it once stars the transcript, calling it again unstars it.
-- To list only starred transcripts for the current user, use `GET /api/transcripts/{project_id}/?starred=true`.
+- To list only starred transcripts for the current user, use `GET /api/v1/transcripts/?starred=true`.
 
 ## Example
 
 ```bash
-curl -X PATCH https://platform-api.sophy.co/api/transcripts/{project_id}/{transcript_id}/star/ \
-  -H "Authorization: Bearer suk_..."
+curl -X PATCH https://platform-api.sophy.co/api/v1/transcripts/{transcript_id}/star/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 ```

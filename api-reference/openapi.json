@@ -3447,9 +3447,8 @@ components:
           readOnly: true
         run_attempt_no:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         external_ref:
           type: string
           description: Customer's record id the call was started from (e.g. an order
@@ -3627,9 +3626,8 @@ components:
           readOnly: true
         run_attempt_no:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         external_ref:
           type: string
           description: Customer's record id the call was started from (e.g. an order
@@ -3841,24 +3839,20 @@ components:
           readOnly: true
         outbound_attempts:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         outbound_answered:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         inbound_calls:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         inbound_answered:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         total_calls:
           type: integer
           readOnly: true
@@ -5056,9 +5050,8 @@ components:
           $ref: '#/components/schemas/GatewayEnum'
         amount_cents:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         currency:
           type: string
           maxLength: 10
@@ -5514,4 +5507,8 @@ components:
       scheme: bearer
 servers:
 - url: https://platform-api.sophy.co
-  description: API Server
+  description: Production
+- url: https://test-platform-api.sophy.co
+  description: Test
+- url: http://localhost:8000
+  description: Local
