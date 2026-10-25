@@ -1,15 +1,11 @@
 ---
 title: 'Get Call Summary'
-openapi: 'GET /api/calls/{project_id}/summary/'
+openapi: 'GET /api/v1/calls/summary/'
 ---
 
-Aggregate KPIs for a project's calls: volume, answer rate, talk time and cost. Computed in the database, so it stays fast over hundreds of thousands of calls.
+Aggregate KPIs for a project's calls: volume, answer rate, talk time and cost. Computed in the database, so it stays fast over hundreds of thousands of calls. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 Accepts the same filters as [List Calls](/api-reference/endpoint/list-calls), so any list view can show totals for exactly what is on screen.
-
-## Path Parameters
-
-- `project_id` (string, required): Project UUID
 
 ## Query Parameters
 
@@ -55,14 +51,17 @@ the KPI strip above a filtered table can always be made to agree with it.
 
 ```bash
 # Project totals
-curl -X GET https://platform-api.sophy.co/api/calls/{project_id}/summary/ \
-  -H "Authorization: Bearer suk_..."
+curl -X GET https://platform-api.sophy.co/api/v1/calls/summary/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Daily volume for a month
-curl -X GET "https://platform-api.sophy.co/api/calls/{project_id}/summary/?group_by=day&date_from=2026-07-01T00:00:00Z&date_to=2026-07-31T23:59:59Z" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/calls/summary/?group_by=day&date_from=2026-07-01T00:00:00Z&date_to=2026-07-31T23:59:59Z" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Outcome breakdown for one campaign
-curl -X GET "https://platform-api.sophy.co/api/calls/{project_id}/summary/?group_by=outcome&campaign_id={campaign_id}" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/calls/summary/?group_by=outcome&campaign_id={campaign_id}" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 ```

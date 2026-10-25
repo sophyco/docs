@@ -1,13 +1,12 @@
 ---
 title: 'Get Call Messages'
-openapi: 'GET /api/calls/{project_id}/{call_id}/messages/'
+openapi: 'GET /api/v1/calls/{call_id}/messages/'
 ---
 
-Retrieve the turn-by-turn conversation of a call — the voice counterpart of [List Dialogues](/api-reference/endpoint/get-dialogues).
+Retrieve the turn-by-turn conversation of a call — the voice counterpart of [List Dialogues](/api-reference/endpoint/get-dialogues). The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 ## Path Parameters
 
-- `project_id` (string, required): Project UUID
 - `call_id` (string, required): Call UUID
 
 ## Query Parameters
@@ -59,6 +58,7 @@ Turns are returned in the order they happened. A call with no stored report retu
 ## Example
 
 ```bash
-curl -X GET https://platform-api.sophy.co/api/calls/{project_id}/{call_id}/messages/ \
-  -H "Authorization: Bearer suk_..."
+curl -X GET https://platform-api.sophy.co/api/v1/calls/{call_id}/messages/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 ```

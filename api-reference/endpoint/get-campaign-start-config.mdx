@@ -1,0 +1,6 @@
+---
+title: 'Get Campaign Start Config'
+openapi: 'GET /api/v1/campaigns/{campaign_id}/start-config/'
+---
+
+Everything needed to render the start screen: which start paths are enabled (lookup by record id, manual form), the agent's declared variables and which are required, selectable lines, the calling window and whether a call can be started right now (`startable`, `blocked_reason`). The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.

@@ -1,0 +1,6 @@
+---
+title: 'Look Up Campaign Records'
+openapi: 'POST /api/v1/campaigns/{campaign_id}/lookup/'
+---
+
+Look record ids up in the campaign's contact source and get a verdict per id: `found` (callable), `not_found`, `invalid` (missing number or required variables) or `blocked`, plus the last call placed for that id. Writes nothing. At most 200 ids per request. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.

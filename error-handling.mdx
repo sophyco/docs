@@ -178,14 +178,15 @@ logging.basicConfig(level=logging.DEBUG)
 
 **cURL:**
 ```bash
-curl -v -X GET http://localhost:8000/api/transcripts/{projectId}/ \
-  -H "Authorization: Bearer {token}"
+curl -v -X GET https://platform-api.sophy.co/api/v1/transcripts/ \
+  -H "Authorization: Bearer {token}" \
+  -H "Sophy-Project: {project_id}"
 ```
 
 ### Check token validity
 
 ```bash
-curl -X GET http://localhost:8000/api/auth/tokens/ \
+curl -X GET https://platform-api.sophy.co/api/auth/tokens/ \
   -H "Authorization: Bearer {token}" | jq '.[] | select(.id == "token-id")'
 ```
 
@@ -193,7 +194,8 @@ curl -X GET http://localhost:8000/api/auth/tokens/ \
 
 ```bash
 # Test with invalid token
-curl -X GET http://localhost:8000/api/transcripts/{projectId}/ \
-  -H "Authorization: Bearer invalid_token"
+curl -X GET https://platform-api.sophy.co/api/v1/transcripts/ \
+  -H "Authorization: Bearer invalid_token" \
+  -H "Sophy-Project: {project_id}"
 # Should return 401
 ```

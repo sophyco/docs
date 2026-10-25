@@ -1,9 +1,9 @@
 ---
 title: 'Replay Call Report'
-openapi: 'POST /api/calls/{project_id}/{call_id}/replay/'
+openapi: 'POST /api/v1/calls/{call_id}/replay/'
 ---
 
-Re-run a call's post-call workflow from its stored report — use this when someone asks for a call report to be sent again.
+Re-run a call's post-call workflow from its stored report — use this when someone asks for a call report to be sent again. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 No copy of the original email is kept. Instead the stored report is pushed back through the same code path the provider's webhook uses, so the report is rendered fresh against the current template and configuration. That also means a fixed template or handler can be re-applied to old calls.
 
@@ -13,7 +13,6 @@ This sends email. It is not a read-only preview — confirm with the user before
 
 ## Path Parameters
 
-- `project_id` (string, required): Project UUID
 - `call_id` (string, required): Call UUID
 
 ## Body
@@ -53,12 +52,14 @@ This sends email. It is not a read-only preview — confirm with the user before
 
 ```bash
 # Re-send to the workflow's normal recipients
-curl -X POST https://platform-api.sophy.co/api/calls/{project_id}/{call_id}/replay/ \
-  -H "Authorization: Bearer suk_..."
+curl -X POST https://platform-api.sophy.co/api/v1/calls/{call_id}/replay/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Send this one report to a single address
-curl -X POST https://platform-api.sophy.co/api/calls/{project_id}/{call_id}/replay/ \
+curl -X POST https://platform-api.sophy.co/api/v1/calls/{call_id}/replay/ \
   -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}" \
   -H "Content-Type: application/json" \
   -d '{"to": ["me@example.com"]}'
 ```

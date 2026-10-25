@@ -18,11 +18,11 @@ paths:
       parameters:
       - in: path
         name: project_id
+        required: true
         schema:
           type: string
           format: uuid
         description: Project UUID
-        required: true
       tags:
       - analytics
       requestBody:
@@ -53,6 +53,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AnalyticsValidationError'
           description: ''
+      deprecated: true
   /api/auth/login/:
     post:
       operationId: auth_login_create
@@ -540,6 +541,13 @@ paths:
       operationId: calls_list
       description: List calls in a project, newest first.
       parameters:
+      - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
       - in: query
         name: agent_id
         schema:
@@ -627,13 +635,6 @@ paths:
         name: platform_type
         schema:
           type: string
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project UUID
-        required: true
       - in: query
         name: run_id
         schema:
@@ -655,24 +656,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCallList'
           description: ''
+      deprecated: true
   /api/calls/{project_id}/{call_id}/:
     get:
       operationId: calls_retrieve
       description: Retrieve one call, with its stored report.
       parameters:
       - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+      - in: path
         name: call_id
         schema:
           type: string
           format: uuid
         description: Call UUID
-        required: true
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project UUID
         required: true
       tags:
       - calls
@@ -686,11 +688,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/CallDetail'
           description: ''
+      deprecated: true
   /api/calls/{project_id}/{call_id}/messages/:
     get:
       operationId: calls_messages
       description: The turn-by-turn conversation for a call.
       parameters:
+      - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
       - in: path
         name: call_id
         schema:
@@ -706,13 +716,6 @@ paths:
         name: offset
         schema:
           type: integer
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project UUID
-        required: true
       tags:
       - calls
       security:
@@ -725,6 +728,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCallMessageList'
           description: ''
+      deprecated: true
   /api/calls/{project_id}/{call_id}/replay/:
     post:
       operationId: calls_replay
@@ -737,18 +741,18 @@ paths:
         the first time.
       parameters:
       - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+      - in: path
         name: call_id
         schema:
           type: string
           format: uuid
         description: Call UUID
-        required: true
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project UUID
         required: true
       tags:
       - calls
@@ -779,12 +783,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/CallReplayNoReport'
           description: ''
+      deprecated: true
   /api/calls/{project_id}/numbers/{number}/:
     get:
       operationId: calls_number_history
       description: 'Everything that ever happened on one number: the rollup plus every
         attempt.'
       parameters:
+      - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
       - in: query
         name: limit
         schema:
@@ -799,13 +811,6 @@ paths:
         name: offset
         schema:
           type: integer
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project UUID
-        required: true
       tags:
       - calls
       security:
@@ -818,12 +823,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/NumberCallHistory'
           description: ''
+      deprecated: true
   /api/calls/{project_id}/summary/:
     get:
       operationId: calls_summary
       description: Aggregate KPIs for a project's calls. Computed in the DB, not in
         Python.
       parameters:
+      - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
       - in: query
         name: agent_name
         schema:
@@ -868,13 +881,6 @@ paths:
         name: origin
         schema:
           type: string
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project UUID
-        required: true
       tags:
       - calls
       security:
@@ -887,6 +893,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/CallSummary'
           description: ''
+      deprecated: true
   /api/calls/recordings/{filename}/:
     get:
       operationId: calls_recordings_retrieve
@@ -916,15 +923,15 @@ paths:
   /api/campaigns/{project_id}/:
     get:
       operationId: campaigns_list
-      description: List campaigns in a project.
+      description: List the project's campaigns (archived ones excluded unless ?archived=true).
       parameters:
       - in: path
         name: project_id
+        required: true
         schema:
           type: string
           format: uuid
         description: Project UUID
-        required: true
       tags:
       - campaigns
       security:
@@ -937,26 +944,27 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Campaign'
+                  $ref: '#/components/schemas/OutreachCampaign'
           description: ''
+      deprecated: true
   /api/campaigns/{project_id}/{campaign_id}/:
     get:
       operationId: campaigns_retrieve
       description: Retrieve a single campaign.
       parameters:
       - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+      - in: path
         name: campaign_id
         schema:
           type: string
           format: uuid
         description: Campaign UUID
-        required: true
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project UUID
         required: true
       tags:
       - campaigns
@@ -968,26 +976,27 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Campaign'
+                $ref: '#/components/schemas/OutreachCampaign'
           description: ''
+      deprecated: true
   /api/campaigns/{project_id}/{campaign_id}/preview/:
     post:
       operationId: campaigns_preview_create
       description: 'Dry-run: who would be dialed, with which vars. Nothing is dispatched.'
       parameters:
       - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+      - in: path
         name: campaign_id
         schema:
           type: string
           format: uuid
         description: Campaign UUID
-        required: true
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project UUID
         required: true
       - in: query
         name: schedule_id
@@ -1014,24 +1023,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/CampaignPreview'
           description: ''
+      deprecated: true
   /api/campaigns/{project_id}/{campaign_id}/sync/:
     post:
       operationId: campaigns_sync_create
       description: Run contact_source → pivot sync (persists the pivot; no dialing).
       parameters:
       - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+      - in: path
         name: campaign_id
         schema:
           type: string
           format: uuid
         description: Campaign UUID
-        required: true
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project UUID
         required: true
       tags:
       - campaigns
@@ -1045,6 +1055,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/CampaignSyncResult'
           description: ''
+      deprecated: true
   /api/communication/v1/channels/{channel_id}/messages/:
     post:
       operationId: communication_v1_channels_messages_create
@@ -1713,6 +1724,13 @@ paths:
       operationId: transcripts_retrieve
       description: List transcripts for a project
       parameters:
+      - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
       - in: query
         name: conversationID
         schema:
@@ -1736,13 +1754,6 @@ paths:
         name: platform
         schema:
           type: string
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project ID
-        required: true
       - in: query
         name: sessionID
         schema:
@@ -1768,6 +1779,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedTranscriptList'
           description: ''
+      deprecated: true
   /api/transcripts/{project_id}/{transcript_id}/label/:
     post:
       operationId: transcripts_label_create
@@ -1775,10 +1787,11 @@ paths:
       parameters:
       - in: path
         name: project_id
+        required: true
         schema:
           type: string
           format: uuid
-        required: true
+        description: Project UUID
       - in: path
         name: transcript_id
         schema:
@@ -1808,6 +1821,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/QueueTranscriptLabelingResponse'
           description: ''
+      deprecated: true
   /api/transcripts/{project_id}/{transcript_id}/labels/:
     patch:
       operationId: transcripts_labels_partial_update
@@ -1815,11 +1829,11 @@ paths:
       parameters:
       - in: path
         name: project_id
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project ID
-        required: true
+        description: Project UUID
       - in: path
         name: transcript_id
         schema:
@@ -1849,6 +1863,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Transcript'
           description: ''
+      deprecated: true
   /api/transcripts/{project_id}/{transcript_id}/read/:
     patch:
       operationId: transcripts_read_partial_update
@@ -1856,11 +1871,11 @@ paths:
       parameters:
       - in: path
         name: project_id
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project ID
-        required: true
+        description: Project UUID
       - in: path
         name: transcript_id
         schema:
@@ -1890,6 +1905,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Transcript'
           description: ''
+      deprecated: true
   /api/transcripts/{project_id}/{transcript_id}/star/:
     patch:
       operationId: transcripts_star_partial_update
@@ -1897,11 +1913,11 @@ paths:
       parameters:
       - in: path
         name: project_id
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project ID
-        required: true
+        description: Project UUID
       - in: path
         name: transcript_id
         schema:
@@ -1931,11 +1947,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/Transcript'
           description: ''
+      deprecated: true
   /api/transcripts/{project_id}/dialogues/:
     get:
       operationId: transcripts_dialogues_retrieve
       description: List dialogues for a conversation
       parameters:
+      - in: path
+        name: project_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
       - in: query
         name: conversationID
         schema:
@@ -1956,13 +1980,6 @@ paths:
         schema:
           type: integer
         description: Number of items to skip (default 0)
-      - in: path
-        name: project_id
-        schema:
-          type: string
-          format: uuid
-        description: Project ID
-        required: true
       - in: query
         name: role
         schema:
@@ -1991,6 +2008,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedDialogueList'
           description: ''
+      deprecated: true
   /api/transcripts/{project_id}/labels/:
     get:
       operationId: transcripts_labels_retrieve
@@ -1998,13 +2016,1092 @@ paths:
       parameters:
       - in: path
         name: project_id
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project ID
-        required: true
+        description: Project UUID
       tags:
       - transcripts
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelList'
+          description: ''
+      deprecated: true
+  /api/v1/analytics/:
+    post:
+      operationId: analytics_batch_2
+      description: |-
+        Run a batch of independent aggregation queries against a project's
+        calls / conversations / campaigns in one request. Structural and
+        semantic errors are validated for the WHOLE batch up front (a single
+        400 listing every accepted-values set); once that passes, each query
+        runs independently — one query's runtime failure becomes an `error`
+        field in its own result slot, not a failed batch.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsValidationError'
+          description: ''
+  /api/v1/calls/:
+    get:
+      operationId: calls_list_2
+      description: List calls in a project, newest first.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: query
+        name: agent_id
+        schema:
+          type: integer
+        description: AI agent's numeric id.
+      - in: query
+        name: agent_name
+        schema:
+          type: string
+        description: Agent name, case-insensitive substring. Use this when the UI
+          has a name rather than an id.
+      - in: query
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: campaign_name
+        schema:
+          type: string
+        description: Campaign name, case-insensitive substring.
+      - in: query
+        name: channel_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: channel_name
+        schema:
+          type: string
+        description: Channel name, case-insensitive substring.
+      - in: query
+        name: contact_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+        description: 'Inclusive lower bound on created_at — when the call was recorded.
+          Not started_at: a call that never connected has none, and would drop out
+          of the range entirely.'
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive upper bound on created_at.
+      - in: query
+        name: direction
+        schema:
+          type: string
+        description: inbound | outbound
+      - in: query
+        name: has_recording
+        schema:
+          type: boolean
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
+      - in: query
+        name: number
+        schema:
+          type: string
+        description: Substring match on either number
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
+      - in: query
+        name: origin
+        schema:
+          type: string
+        description: inbound | campaign | manual | api
+      - in: query
+        name: outcome
+        schema:
+          type: string
+      - in: query
+        name: platform_type
+        schema:
+          type: string
+      - in: query
+        name: run_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: state
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCallList'
+          description: ''
+  /api/v1/calls/{call_id}/:
+    get:
+      operationId: calls_retrieve_2
+      description: Retrieve one call, with its stored report.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: call_id
+        schema:
+          type: string
+          format: uuid
+        description: Call UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallDetail'
+          description: ''
+  /api/v1/calls/{call_id}/messages/:
+    get:
+      operationId: calls_messages_2
+      description: The turn-by-turn conversation for a call.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: call_id
+        schema:
+          type: string
+          format: uuid
+        description: Call UUID
+        required: true
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: offset
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCallMessageList'
+          description: ''
+  /api/v1/calls/{call_id}/replay/:
+    post:
+      operationId: calls_replay_2
+      description: |-
+        Re-run the post-call workflow for a call from its stored report.
+
+        Side-effecting: this re-sends the report email. Nothing is recomputed from
+        the provider — the stored report is replayed through the same entry point
+        the webhook uses, so recording storage and email happen exactly as they did
+        the first time.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: call_id
+        schema:
+          type: string
+          format: uuid
+        description: Call UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallReplayRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CallReplayRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CallReplayRequest'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallReplayAccepted'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallReplayNoReport'
+          description: ''
+  /api/v1/calls/numbers/{number}/:
+    get:
+      operationId: calls_number_history_2
+      description: 'Everything that ever happened on one number: the rollup plus every
+        attempt.'
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: path
+        name: number
+        schema:
+          type: string
+        description: Phone number in E.164
+        required: true
+      - in: query
+        name: offset
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NumberCallHistory'
+          description: ''
+  /api/v1/calls/summary/:
+    get:
+      operationId: calls_summary_2
+      description: Aggregate KPIs for a project's calls. Computed in the DB, not in
+        Python.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: query
+        name: agent_name
+        schema:
+          type: string
+      - in: query
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: campaign_name
+        schema:
+          type: string
+      - in: query
+        name: channel_name
+        schema:
+          type: string
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+        description: 'Inclusive lower bound on created_at — when the call was recorded.
+          Not started_at: a call that never connected has none, and would drop out
+          of the range entirely.'
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive upper bound on created_at.
+      - in: query
+        name: direction
+        schema:
+          type: string
+      - in: query
+        name: group_by
+        schema:
+          type: string
+        description: day | outcome | state | channel | campaign (omit for totals only)
+      - in: query
+        name: origin
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallSummary'
+          description: ''
+  /api/v1/campaigns/:
+    get:
+      operationId: v1_campaigns_list
+      description: List the project's campaigns (archived ones excluded unless ?archived=true).
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OutreachCampaign'
+          description: ''
+  /api/v1/campaigns/{campaign_id}/:
+    get:
+      operationId: v1_campaigns_retrieve
+      description: Retrieve a single campaign.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutreachCampaign'
+          description: ''
+  /api/v1/campaigns/{campaign_id}/calls/:
+    post:
+      operationId: campaigns_start_call
+      description: |-
+        Start one confirmed call: by record id (``lookup_key`` + ``confirm_key``)
+        or from a form (``number`` + ``variables`` + ``confirm_last4``).
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+        description: 'Repeat-safe start: the same key within 10 minutes returns the
+          first result instead of dialing again.'
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutreachStartCall'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OutreachStartCall'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OutreachStartCall'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutreachStartedCall'
+          description: ''
+  /api/v1/campaigns/{campaign_id}/lookup/:
+    post:
+      operationId: campaigns_lookup
+      description: Look record ids up in the contact source. Writes nothing.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutreachLookupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OutreachLookupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OutreachLookupRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutreachLookupResponse'
+          description: ''
+  /api/v1/campaigns/{campaign_id}/preview/:
+    post:
+      operationId: v1_campaigns_preview_create
+      description: 'Dry-run: who would be dialed, with which vars. Nothing is dispatched.'
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      - in: query
+        name: schedule_id
+        schema:
+          type: string
+          format: uuid
+        description: Preview under this CampaignSchedule's eligibility_workflow. Omit
+          to preview with no eligibility rule (everyone in the pivot) — eligibility
+          is per-schedule, not a campaign default.
+      - in: query
+        name: sync
+        schema:
+          type: boolean
+        description: Re-sync the pivot first (default true).
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignPreview'
+          description: ''
+  /api/v1/campaigns/{campaign_id}/runs/:
+    post:
+      operationId: campaigns_start_run
+      description: |-
+        Start a confirmed batch of record ids as one manual run.
+
+        Ids are looked up again; only callable ones are dialed. ``confirm_count``
+        must equal that number — if the source changed since the user reviewed
+        the list, the fresh results come back with 409 ``count_changed``.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+        description: 'Repeat-safe start: the same key within 10 minutes returns the
+          first result instead of dialing again.'
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutreachStartRun'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OutreachStartRun'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OutreachStartRun'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutreachStartedRun'
+          description: ''
+  /api/v1/campaigns/{campaign_id}/runs/{run_id}/:
+    get:
+      operationId: campaigns_run_detail
+      description: 'A run''s progress: counts by call state plus one row per call.'
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      - in: path
+        name: run_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutreachRunDetail'
+          description: ''
+  /api/v1/campaigns/{campaign_id}/start-config/:
+    get:
+      operationId: campaigns_start_config
+      description: Everything Studio needs to render the start screen.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutreachStartConfig'
+          description: ''
+  /api/v1/campaigns/{campaign_id}/sync/:
+    post:
+      operationId: v1_campaigns_sync_create
+      description: Run contact_source → pivot sync (persists the pivot; no dialing).
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: campaign_id
+        schema:
+          type: string
+          format: uuid
+        description: Campaign UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignSyncResult'
+          description: ''
+  /api/v1/transcripts/:
+    get:
+      operationId: v1_transcripts_retrieve
+      description: List transcripts for a project
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: query
+        name: conversationID
+        schema:
+          type: string
+      - in: query
+        name: label
+        schema:
+          type: string
+        description: Filter by label
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
+      - in: query
+        name: platform
+        schema:
+          type: string
+      - in: query
+        name: sessionID
+        schema:
+          type: string
+      - in: query
+        name: starred
+        schema:
+          type: boolean
+        description: Filter by starred status for current user
+      - in: query
+        name: unread
+        schema:
+          type: boolean
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTranscriptList'
+          description: ''
+  /api/v1/transcripts/{transcript_id}/label/:
+    post:
+      operationId: v1_transcripts_label_create
+      description: Queue one explicitly requested transcript-labeling run.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transcript'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Transcript'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Transcript'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueTranscriptLabelingResponse'
+          description: ''
+  /api/v1/transcripts/{transcript_id}/labels/:
+    patch:
+      operationId: v1_transcripts_labels_partial_update
+      description: Replace labels on a transcript
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        description: Transcript ID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSetLabelsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSetLabelsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSetLabelsRequest'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transcript'
+          description: ''
+  /api/v1/transcripts/{transcript_id}/read/:
+    patch:
+      operationId: v1_transcripts_read_partial_update
+      description: Mark a transcript as read for the current user
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        description: Transcript ID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transcript'
+          description: ''
+  /api/v1/transcripts/{transcript_id}/star/:
+    patch:
+      operationId: v1_transcripts_star_partial_update
+      description: Toggle star for the current user on a transcript
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: path
+        name: transcript_id
+        schema:
+          type: string
+        description: Transcript ID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTranscript'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transcript'
+          description: ''
+  /api/v1/transcripts/dialogues/:
+    get:
+      operationId: v1_transcripts_dialogues_retrieve
+      description: List dialogues for a conversation
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      - in: query
+        name: conversationID
+        schema:
+          type: string
+        description: Conversation ID
+        required: true
+      - in: query
+        name: format
+        schema:
+          type: string
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
+      - in: query
+        name: role
+        schema:
+          type: string
+      - in: query
+        name: sessionID
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+      - in: query
+        name: type
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDialogueList'
+          description: ''
+  /api/v1/transcripts/labels/:
+    get:
+      operationId: v1_transcripts_labels_retrieve
+      description: List all unique labels used in a project (for autocomplete)
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. Required for Studio (JWT) sessions
+          and unbound API keys; omitted for API keys bound to a project.
+      tags:
+      - v1
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -2059,6 +3156,12 @@ components:
           type: string
           description: Token name/description
           maxLength: 255
+        project:
+          type: string
+          format: uuid
+          nullable: true
+          description: Bind the key to one project (recommended). Requests with a
+            bound key need no Sophy-Project header.
         user_id:
           type: string
           readOnly: true
@@ -2224,6 +3327,18 @@ components:
             additionalProperties: {}
       required:
       - errors
+    AutoLabeling:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        idle_minutes:
+          type: integer
+          minimum: 1
+          description: Label a conversation only after this many minutes without activity.
+            Defaults to 30.
+        existing_transcripts:
+          $ref: '#/components/schemas/ExistingTranscripts'
     BackendEnum:
       enum:
       - native
@@ -2332,9 +3447,33 @@ components:
           readOnly: true
         run_attempt_no:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
+        external_ref:
+          type: string
+          description: Customer's record id the call was started from (e.g. an order
+            / transaction id typed in Studio).
+          maxLength: 128
+        initiated_by_id:
+          type: integer
+          nullable: true
+          description: Who confirmed and started this call in Studio.
+          readOnly: true
+        initiated_by_name:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Who confirmed and started the call in Studio; null otherwise.
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the starter completed the second confirmation step.
+        result:
+          nullable: true
+          readOnly: true
+          description: The campaign's chosen structured-output value (Campaign.result_field),
+            e.g. a confirmation verdict. Null when unset or not reported yet.
         state:
           $ref: '#/components/schemas/StateFf0Enum'
         outcome:
@@ -2405,11 +3544,14 @@ components:
       - direction
       - has_recording
       - id
+      - initiated_by_id
+      - initiated_by_name
       - last_attempt_at
       - origin
       - project_id
       - recording_url
       - report
+      - result
       - run_id
       - structured_output
       - updated_at
@@ -2484,9 +3626,33 @@ components:
           readOnly: true
         run_attempt_no:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
+        external_ref:
+          type: string
+          description: Customer's record id the call was started from (e.g. an order
+            / transaction id typed in Studio).
+          maxLength: 128
+        initiated_by_id:
+          type: integer
+          nullable: true
+          description: Who confirmed and started this call in Studio.
+          readOnly: true
+        initiated_by_name:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Who confirmed and started the call in Studio; null otherwise.
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the starter completed the second confirmation step.
+        result:
+          nullable: true
+          readOnly: true
+          description: The campaign's chosen structured-output value (Campaign.result_field),
+            e.g. a confirmation verdict. Null when unset or not reported yet.
         state:
           $ref: '#/components/schemas/StateFf0Enum'
         outcome:
@@ -2554,10 +3720,13 @@ components:
       - direction
       - has_recording
       - id
+      - initiated_by_id
+      - initiated_by_name
       - last_attempt_at
       - origin
       - project_id
       - recording_url
+      - result
       - run_id
       - updated_at
     CallMessage:
@@ -2670,24 +3839,20 @@ components:
           readOnly: true
         outbound_attempts:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         outbound_answered:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         inbound_calls:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         inbound_answered:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          maximum: 2147483647
+          minimum: -2147483648
         total_calls:
           type: integer
           readOnly: true
@@ -2744,93 +3909,6 @@ components:
       - group_by
       - groups
       - totals
-    Campaign:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        name:
-          type: string
-          readOnly: true
-        state:
-          allOf:
-          - $ref: '#/components/schemas/CampaignStateEnum'
-          readOnly: true
-        medium:
-          allOf:
-          - $ref: '#/components/schemas/MediumEnum'
-          readOnly: true
-        message_purpose:
-          allOf:
-          - $ref: '#/components/schemas/MessagePurposeEnum'
-          readOnly: true
-        channel:
-          type: string
-          format: uuid
-          readOnly: true
-          description: Line + credentials + concurrency quota.
-        agent:
-          type: integer
-          readOnly: true
-          nullable: true
-          description: Chosen at campaign creation; the campaign carries the agent.
-            Null for text-only campaigns, which never place a call.
-        contact_source_workflow:
-          type: string
-          format: uuid
-          readOnly: true
-          nullable: true
-          description: contact_source workflow that syncs the CampaignContact pivot
-            (kind='contact_source').
-        postcall_workflow:
-          type: string
-          format: uuid
-          readOnly: true
-          nullable: true
-        required_vars:
-          readOnly: true
-          description: Vars that must be present/non-empty or the row is skipped.
-        calling_window:
-          readOnly: true
-          nullable: true
-          description: 'Bu kampanyanın arama/gönderim saatleri, ör. {"start": "09:00",
-            "end": "20:00", "days": [1,2,3,4,5]} — days cron numaralandırması (Paz=0…Cmt=6),
-            yazılmazsa her gün. Pencere kapandığında kuyrukta kalan iş iptal edilir.
-            null → kısıt yok (kanala düşer).'
-        timezone:
-          type: string
-          readOnly: true
-          nullable: true
-          description: null → inherit from channel.
-        max_attempts_per_run:
-          type: integer
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - agent
-      - calling_window
-      - channel
-      - contact_source_workflow
-      - created_at
-      - id
-      - max_attempts_per_run
-      - medium
-      - message_purpose
-      - name
-      - postcall_workflow
-      - required_vars
-      - state
-      - timezone
-      - updated_at
     CampaignPreview:
       type: object
       properties:
@@ -2851,18 +3929,6 @@ components:
       - skipped
       - stats
       - targets
-    CampaignStateEnum:
-      enum:
-      - draft
-      - active
-      - paused
-      - archived
-      type: string
-      description: |-
-        * `draft` - Draft
-        * `active` - Active
-        * `paused` - Paused
-        * `archived` - Archived
     CampaignSyncResult:
       type: object
       properties:
@@ -2914,6 +3980,43 @@ components:
       required:
       - to
       - type
+    ConversationLabel:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required:
+      - name
+    ConversationLabeling:
+      type: object
+      description: Fields read by transcripts.services.labeling; unknown keys are
+        dropped.
+      properties:
+        enabled:
+          type: boolean
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationLabel'
+        fallback_label:
+          type: string
+        instructions:
+          type: string
+        model:
+          type: string
+        max_messages:
+          type: integer
+          minimum: 1
+        max_labels:
+          type: integer
+          minimum: 1
+          nullable: true
+        version:
+          type: string
+        auto_labeling:
+          $ref: '#/components/schemas/AutoLabeling'
     ConversationOutboundMessage:
       type: object
       description: Reply within an existing conversation — channel/recipient are implied.
@@ -3132,6 +4235,21 @@ components:
           description: The Webchat's id. Sent as verify.projectID by the bundle.
       required:
       - projectID
+    ExistingTranscripts:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Also label conversations from before auto-labeling started
+            (extra LLM cost).
+        cutoff_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Set by the server when auto-labeling starts; older conversations
+            are skipped unless enabled.
+      required:
+      - cutoff_at
     GatewayCallback:
       type: object
       properties:
@@ -3215,14 +4333,6 @@ components:
       description: |-
         * `voice` - Voice
         * `text` - Text
-    MessagePurposeEnum:
-      enum:
-      - transactional
-      - commercial
-      type: string
-      description: |-
-        * `transactional` - Transactional
-        * `commercial` - Commercial
     NullEnum:
       enum:
       - null
@@ -3348,6 +4458,307 @@ components:
         * `voicemail` - Voicemail
         * `failed` - Failed
         * `cancelled` - Cancelled
+    OutreachCampaign:
+      type: object
+      description: Campaign as Studio's Outreach list/detail shows it.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        state:
+          allOf:
+          - $ref: '#/components/schemas/OutreachCampaignStateEnum'
+          readOnly: true
+        medium:
+          allOf:
+          - $ref: '#/components/schemas/MediumEnum'
+          readOnly: true
+        channel:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Line + credentials + concurrency quota.
+        channel_name:
+          type: string
+          readOnly: true
+        agent:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Chosen at campaign creation; the campaign carries the agent.
+            Null for text-only campaigns, which never place a call.
+        agent_name:
+          type: string
+          readOnly: true
+        allow_lookup:
+          type: boolean
+          readOnly: true
+          description: Studio can start calls by record id (single or batch), looked
+            up in the contact source.
+        allow_manual:
+          type: boolean
+          readOnly: true
+          description: Studio can start a call from a hand-filled form (number + variables).
+        lookup_key_label:
+          type: string
+          readOnly: true
+          description: Label Studio shows for the id, e.g. 'İşlem ID'.
+        result_field:
+          type: string
+          readOnly: true
+          description: structured_output key Studio shows as the call's result, e.g.
+            'teyit_durumu'. Empty → the provider outcome.
+        calling_window:
+          readOnly: true
+          nullable: true
+          description: 'Bu kampanyanın arama/gönderim saatleri, ör. {"start": "09:00",
+            "end": "20:00", "days": [1,2,3,4,5]} — days cron numaralandırması (Paz=0…Cmt=6),
+            yazılmazsa her gün. Pencere kapandığında kuyrukta kalan iş iptal edilir.
+            null → kısıt yok (kanala düşer).'
+        timezone:
+          type: string
+          readOnly: true
+          nullable: true
+          description: null → inherit from channel.
+        trigger_type:
+          type: string
+          readOnly: true
+          description: on_demand | scheduled | mixed | none (no way to start it).
+        schedules:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        next_run_at:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        calls_today:
+          type: integer
+          readOnly: true
+          description: 'Voice: calls created today.'
+        messages_today:
+          type: integer
+          readOnly: true
+          description: 'Text: messages sent today.'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent
+      - agent_name
+      - allow_lookup
+      - allow_manual
+      - calling_window
+      - calls_today
+      - channel
+      - channel_name
+      - created_at
+      - id
+      - lookup_key_label
+      - medium
+      - messages_today
+      - name
+      - next_run_at
+      - result_field
+      - schedules
+      - state
+      - timezone
+      - trigger_type
+      - updated_at
+    OutreachCampaignStateEnum:
+      enum:
+      - draft
+      - active
+      - paused
+      - archived
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `active` - Active
+        * `paused` - Paused
+        * `archived` - Archived
+    OutreachLookupRequest:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: string
+          maxItems: 200
+      required:
+      - keys
+    OutreachLookupResponse:
+      type: object
+      properties:
+        source:
+          type: object
+          additionalProperties: {}
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - results
+      - source
+    OutreachRunDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        state:
+          type: string
+        trigger:
+          type: string
+        stats:
+          type: object
+          additionalProperties: {}
+        progress:
+          type: object
+          additionalProperties: {}
+        calls:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - calls
+      - id
+      - progress
+      - state
+      - stats
+      - trigger
+    OutreachStartCall:
+      type: object
+      properties:
+        lookup_key:
+          type: string
+        confirm_key:
+          type: string
+        number:
+          type: string
+        variables:
+          type: object
+          additionalProperties: {}
+        confirm_last4:
+          type: string
+        channel_id:
+          type: string
+          format: uuid
+          nullable: true
+    OutreachStartConfig:
+      type: object
+      properties:
+        lookup:
+          type: object
+          additionalProperties: {}
+        manual:
+          type: object
+          additionalProperties: {}
+        variables:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        variables_declared:
+          type: boolean
+        required:
+          type: array
+          items:
+            type: string
+        default_channel:
+          type: object
+          additionalProperties: {}
+        channels:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        calling_window:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        timezone:
+          type: string
+        window_open:
+          type: boolean
+        startable:
+          type: boolean
+        blocked_reason:
+          type: string
+          nullable: true
+        max_batch:
+          type: integer
+      required:
+      - blocked_reason
+      - calling_window
+      - channels
+      - default_channel
+      - lookup
+      - manual
+      - max_batch
+      - required
+      - startable
+      - timezone
+      - variables
+      - variables_declared
+      - window_open
+    OutreachStartRun:
+      type: object
+      properties:
+        lookup_keys:
+          type: array
+          items:
+            type: string
+          maxItems: 200
+        confirm_count:
+          type: integer
+        channel_id:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - confirm_count
+      - lookup_keys
+    OutreachStartedCall:
+      type: object
+      properties:
+        run_id:
+          type: string
+          format: uuid
+        call_id:
+          type: string
+          format: uuid
+        state:
+          type: string
+      required:
+      - call_id
+      - run_id
+      - state
+    OutreachStartedRun:
+      type: object
+      properties:
+        run_id:
+          type: string
+          format: uuid
+        targeted:
+          type: integer
+      required:
+      - run_id
+      - targeted
     PaginatedAPITokenList:
       type: object
       required:
@@ -3508,6 +4919,12 @@ components:
           type: string
           description: Token name/description
           maxLength: 255
+        project:
+          type: string
+          format: uuid
+          nullable: true
+          description: Bind the key to one project (recommended). Requests with a
+            bound key need no Sophy-Project header.
         user_id:
           type: string
           readOnly: true
@@ -3633,9 +5050,8 @@ components:
           $ref: '#/components/schemas/GatewayEnum'
         amount_cents:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         currency:
           type: string
           maxLength: 10
@@ -3789,6 +5205,18 @@ components:
           type: integer
         final_amount:
           type: integer
+    PrivacyMasking:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Project-wide switch for masking personal data (e.g. contact
+            names). Only true masks.
+    PrivacySettings:
+      type: object
+      properties:
+        masking:
+          $ref: '#/components/schemas/PrivacyMasking'
     Project:
       type: object
       properties:
@@ -3833,8 +5261,9 @@ components:
           type: boolean
           readOnly: true
         conversation_labeling:
-          type: object
-          additionalProperties: {}
+          $ref: '#/components/schemas/ConversationLabeling'
+        privacy:
+          $ref: '#/components/schemas/PrivacySettings'
         createdAt:
           type: string
           format: date-time
@@ -4078,4 +5507,8 @@ components:
       scheme: bearer
 servers:
 - url: https://platform-api.sophy.co
-  description: API Server
+  description: Production
+- url: https://test-platform-api.sophy.co
+  description: Test
+- url: http://localhost:8000
+  description: Local

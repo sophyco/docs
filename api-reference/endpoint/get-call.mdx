@@ -1,13 +1,12 @@
 ---
 title: 'Get Call'
-openapi: 'GET /api/calls/{project_id}/{call_id}/'
+openapi: 'GET /api/v1/calls/{call_id}/'
 ---
 
-Retrieve a single call together with its stored report — the transcript, the provider's analysis and the structured outputs the agent produced.
+Retrieve a single call together with its stored report — the transcript, the provider's analysis and the structured outputs the agent produced. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 ## Path Parameters
 
-- `project_id` (string, required): Project UUID
 - `call_id` (string, required): Call UUID
 
 ## Response
@@ -51,6 +50,7 @@ Every field from [List Calls](/api-reference/endpoint/list-calls), plus:
 ## Example
 
 ```bash
-curl -X GET https://platform-api.sophy.co/api/calls/{project_id}/{call_id}/ \
-  -H "Authorization: Bearer suk_..."
+curl -X GET https://platform-api.sophy.co/api/v1/calls/{call_id}/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 ```

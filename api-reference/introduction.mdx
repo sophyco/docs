@@ -1,33 +1,47 @@
 ---
 title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+description: 'Base URLs, authentication and project scoping for the Sophy Communication Platform API'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URLs
 
-## Welcome
+| Environment | Base URL |
+| --- | --- |
+| Production | `https://platform-api.sophy.co` |
+| Test | `https://test-platform-api.sophy.co` |
+| Local | `http://localhost:8000` |
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+The API playground on every endpoint page has a server picker, so you can choose where Try-It-Out requests go. The examples use production. To target another environment, change only the host.
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+Every request carries a Bearer token in the `Authorization` header: either a Studio session token from [Login](/api-reference/endpoint/login) or an API key (`suk_...`) from [Create Token](/api-reference/endpoint/create-token).
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+```bash
+-H "Authorization: Bearer suk_..."
 ```
+
+## Project scoping
+
+Project-scoped resources (calls, transcripts, campaigns and analytics) live under `/api/v1/` and take the project from the `Sophy-Project` header:
+
+```bash
+curl https://platform-api.sophy.co/api/v1/calls/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
+```
+
+An API key that is bound to a project already carries its project, so you can leave the header out. Studio sessions and unbound keys must send it.
+
+## Migrating from project-in-path routes
+
+The earlier routes put the project in the URL. They still work during migration, but every response carries a `Deprecation` header. Move to `/api/v1/` by dropping the `{project_id}` segment and sending it as `Sophy-Project` instead:
+
+| Deprecated | Current |
+| --- | --- |
+| `/api/calls/{project_id}/…` | `/api/v1/calls/…` |
+| `/api/transcripts/{project_id}/…` | `/api/v1/transcripts/…` |
+| `/api/campaigns/{project_id}/…` | `/api/v1/campaigns/…` |
+| `/api/analytics/{project_id}/` | `/api/v1/analytics/` |
+
+The rest of the path is unchanged. For example, `/api/calls/{project_id}/{call_id}/messages/` becomes `/api/v1/calls/{call_id}/messages/`.

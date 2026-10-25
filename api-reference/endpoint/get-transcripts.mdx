@@ -1,15 +1,11 @@
 ---
 title: 'List Transcripts'
-openapi: 'GET /api/transcripts/{project_id}/'
+openapi: 'GET /api/v1/transcripts/'
 ---
 
-Retrieve conversation transcripts for a project with optional filtering and pagination.
+Retrieve conversation transcripts for a project with optional filtering and pagination. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 Read (`unread`), star (`starred`) and label (`labels`) state is returned inline on every transcript, so a single call gives you everything the inbox needs to render.
-
-## Path Parameters
-
-- `project_id` (string, required): Project UUID
 
 ## Query Parameters
 
@@ -76,35 +72,41 @@ These are separate `PATCH` endpoints — the list endpoint is read-only.
 
 | Action | Endpoint | Scope |
 | --- | --- | --- |
-| Mark as read | [`PATCH /api/transcripts/{project_id}/{transcript_id}/read/`](/api-reference/endpoint/mark-transcript-read) | Per user |
-| Toggle star | [`PATCH /api/transcripts/{project_id}/{transcript_id}/star/`](/api-reference/endpoint/toggle-transcript-star) | Per user |
-| Set labels | [`PATCH /api/transcripts/{project_id}/{transcript_id}/labels/`](/api-reference/endpoint/set-transcript-labels) | Shared across the project |
-| List project labels | [`GET /api/transcripts/{project_id}/labels/`](/api-reference/endpoint/list-transcript-labels) | Shared across the project |
+| Mark as read | [`PATCH /api/v1/transcripts/{transcript_id}/read/`](/api-reference/endpoint/mark-transcript-read) | Per user |
+| Toggle star | [`PATCH /api/v1/transcripts/{transcript_id}/star/`](/api-reference/endpoint/toggle-transcript-star) | Per user |
+| Set labels | [`PATCH /api/v1/transcripts/{transcript_id}/labels/`](/api-reference/endpoint/set-transcript-labels) | Shared across the project |
+| List project labels | [`GET /api/v1/transcripts/labels/`](/api-reference/endpoint/list-transcript-labels) | Shared across the project |
 
 ## Examples
 
 ```bash
 # Get the first page of transcripts
-curl -X GET https://platform-api.sophy.co/api/transcripts/{project_id}/ \
-  -H "Authorization: Bearer suk_..."
+curl -X GET https://platform-api.sophy.co/api/v1/transcripts/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Filter by platform
-curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?platform=whatsapp" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/transcripts/?platform=whatsapp" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Unread transcripts for the current user
-curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?unread=true" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/transcripts/?unread=true" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Starred transcripts for the current user
-curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?starred=true" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/transcripts/?starred=true" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Transcripts carrying the "VIP" label
-curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?label=VIP" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/transcripts/?label=VIP" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 
 # Second page of 50
-curl -X GET "https://platform-api.sophy.co/api/transcripts/{project_id}/?offset=50&limit=50" \
-  -H "Authorization: Bearer suk_..."
+curl -X GET "https://platform-api.sophy.co/api/v1/transcripts/?offset=50&limit=50" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 ```

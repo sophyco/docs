@@ -108,6 +108,20 @@
             ]
           },
           {
+            "group": "Outreach",
+            "pages": [
+              "api-reference/endpoint/list-campaigns",
+              "api-reference/endpoint/get-campaign",
+              "api-reference/endpoint/get-campaign-start-config",
+              "api-reference/endpoint/lookup-campaign-records",
+              "api-reference/endpoint/start-campaign-call",
+              "api-reference/endpoint/start-campaign-run",
+              "api-reference/endpoint/get-campaign-run",
+              "api-reference/endpoint/sync-campaign",
+              "api-reference/endpoint/preview-campaign"
+            ]
+          },
+          {
             "group": "Messaging",
             "pages": [
               "api-reference/endpoint/send-conversation-message",

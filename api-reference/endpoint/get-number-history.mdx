@@ -1,15 +1,14 @@
 ---
 title: 'Get Number Call History'
-openapi: 'GET /api/calls/{project_id}/numbers/{number}/'
+openapi: 'GET /api/v1/calls/numbers/{number}/'
 ---
 
-Everything that ever happened on one phone number: a running tally plus every individual attempt.
+Everything that ever happened on one phone number: a running tally plus every individual attempt. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project.
 
 This answers "who did we call, how many times, and did we ever reach them" in a single request. The tally is maintained as calls finish rather than counted on read, so it stays O(1) however long the history gets — and inbound and outbound calls on the same number share one record.
 
 ## Path Parameters
 
-- `project_id` (string, required): Project UUID
 - `number` (string, required): Phone number in E.164 (e.g. `+905301234567`)
 
 ## Query Parameters
@@ -70,6 +69,7 @@ A number repeatedly dialed with `outbound_answered: 0` is usually worth acting o
 ## Example
 
 ```bash
-curl -X GET https://platform-api.sophy.co/api/calls/{project_id}/numbers/+905301234567/ \
-  -H "Authorization: Bearer suk_..."
+curl -X GET https://platform-api.sophy.co/api/v1/calls/numbers/+905301234567/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
 ```
