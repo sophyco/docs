@@ -1,4 +1,28 @@
 ---
 title: 'Refresh Token'
-openapi: 'POST /api/auth/token/refresh/'
+openapi: 'POST /api/v1/auth/token/refresh/'
 ---
+
+Get a new access token with the `sophy_refresh` cookie set by [Login](/api-reference/endpoint/login).
+The cookie is rotated on every call — the previous one stops working.
+
+## Request
+
+No body. Send the cookie (`credentials: 'include'`) and the header `X-Sophy-CSRF: 1`
+(a CSRF guard: a page on another site cannot add it).
+
+## Response
+
+```json
+{ "access_token": "eyJ..." }
+```
+
+`401` means the session is over — the cookie is missing, expired or already used, the password
+was changed or reset, or the account was deactivated. Log in again.
+
+## Example
+
+```bash
+curl -X POST https://platform-api.sophy.co/api/v1/auth/token/refresh/ \
+  -H "X-Sophy-CSRF: 1" -b cookies.txt -c cookies.txt
+```

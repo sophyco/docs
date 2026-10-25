@@ -1,4 +1,10 @@
 ---
 title: 'Logout'
-openapi: 'POST /api/auth/logout/'
+openapi: 'POST /api/v1/auth/logout/'
 ---
+
+End this browser session: the refresh cookie is invalidated and cleared. Works even when the
+access token has already expired. Send the cookie and `X-Sophy-CSRF: 1`. Returns `204`.
+
+To end **every** session of an account, change the password
+([Change Password](/api-reference/endpoint/change-password)).

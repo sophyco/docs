@@ -1,6 +1,6 @@
 ---
 title: 'Delete Project'
-openapi: 'DELETE /api/organizations/{organization_id}/projects/{id}/'
+openapi: 'DELETE /api/v1/organizations/{organization_id}/projects/{id}/'
 ---
 
 Delete a project.
@@ -21,7 +21,7 @@ Returns a 204 No Content status code on success.
 ## Example
 
 ```bash
-curl -X DELETE https://platform-api.sophy.co/api/auth/organizations/{organization_id}/projects/{id}/ \
+curl -X DELETE https://platform-api.sophy.co/api/v1/organizations/{organization_id}/projects/{id}/ \
   -H "Authorization: Bearer suk_..."
 ```
 

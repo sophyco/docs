@@ -1,6 +1,6 @@
 ---
 title: 'Update Project'
-openapi: 'PATCH /api/organizations/{organization_id}/projects/{id}/'
+openapi: 'PATCH /api/v1/organizations/{organization_id}/projects/{id}/'
 ---
 
 Update a project's details.
@@ -36,7 +36,7 @@ Returns the updated project.
 ## Example
 
 ```bash
-curl -X PATCH https://platform-api.sophy.co/api/auth/organizations/{organization_id}/projects/{id}/ \
+curl -X PATCH https://platform-api.sophy.co/api/v1/organizations/{organization_id}/projects/{id}/ \
   -H "Authorization: Bearer suk_..." \
   -H "Content-Type: application/json" \
   -d '{"name": "Updated Project Name"}'
