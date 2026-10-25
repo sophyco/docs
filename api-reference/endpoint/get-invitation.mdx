@@ -1,0 +1,6 @@
+---
+title: 'Get Invitation'
+openapi: 'GET /api/v1/auth/invitations/{token}/'
+---
+
+Look up an invitation link: the invited email, organization and role, and `needs_password` (true for a new account). `404` = invalid, used or expired (links last 7 days).

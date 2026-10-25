@@ -1,0 +1,6 @@
+---
+title: 'List Project Members'
+openapi: 'GET /api/v1/projects/{project_id}/members/'
+---
+
+Who can reach the project. Organization owners and admins appear with `inherited: true` and role `admin` — they reach every project and cannot be edited here. Needs `project:read`.

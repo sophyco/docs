@@ -1,0 +1,6 @@
+---
+title: 'Accept Invitation'
+openapi: 'POST /api/v1/auth/invitations/accept/'
+---
+
+Send `token`, and `password` when `needs_password` is true (optionally `first_name`, `last_name`). Activates the account and logs in — the response is the same as [Login](/api-reference/endpoint/login).

@@ -1,0 +1,6 @@
+---
+title: 'Revoke Member'
+openapi: 'DELETE /api/v1/organizations/{organization_id}/members/{id}/'
+---
+
+Remove a person from the organization: access ends immediately and all their project grants are deleted. Returns `204`. Needs `members:manage`.
