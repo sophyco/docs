@@ -127,7 +127,8 @@
               "api-reference/endpoint/list-users",
               "api-reference/endpoint/create-user",
               "api-reference/endpoint/get-user",
-              "api-reference/endpoint/update-user"
+              "api-reference/endpoint/update-user",
+              "api-reference/endpoint/resend-user-invite"
             ]
           },
           {
