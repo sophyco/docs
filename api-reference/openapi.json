@@ -1879,6 +1879,182 @@ paths:
                 $ref: '#/components/schemas/LabelList'
           description: ''
       deprecated: true
+  /api/v1/actions/:
+    get:
+      operationId: actions_list
+      description: List the project's agent actions, newest first.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
+      - in: query
+        name: agent_id
+        schema:
+          type: string
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
+      - in: query
+        name: needs_retry
+        schema:
+          type: boolean
+        description: Only actions with a failed step
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - cancelled
+          - done
+          - in_progress
+          - new
+      - in: query
+        name: type
+        schema:
+          type: string
+        description: Action type, e.g. contact_request
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAgentActionList'
+          description: ''
+  /api/v1/actions/{action_id}/:
+    get:
+      operationId: actions_retrieve
+      description: Retrieve a single agent action with its steps and history.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
+      - in: path
+        name: action_id
+        schema:
+          type: string
+        description: Agent action id
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAction'
+          description: ''
+  /api/v1/actions/{action_id}/retry/:
+    post:
+      operationId: actions_retry
+      description: |-
+        Run the action's workflows again in the background. Steps that already
+        succeeded are not repeated, so only failed or skipped steps run.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
+      - in: path
+        name: action_id
+        schema:
+          type: string
+        description: Agent action id
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAction'
+          description: ''
+  /api/v1/actions/{action_id}/status/:
+    post:
+      operationId: actions_set_status
+      description: Advance the action's business status (new → in_progress → done
+        | cancelled).
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
+      - in: path
+        name: action_id
+        schema:
+          type: string
+        description: Agent action id
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentActionStatus'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgentActionStatus'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgentActionStatus'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAction'
+          description: ''
   /api/v1/analytics/:
     post:
       operationId: analytics_batch_2
@@ -4640,6 +4816,78 @@ components:
       - type
       - updated_at
       - user_id
+    AgentAction:
+      type: object
+      description: |-
+        An AgentAction as Studio shows it. ``key`` is left out on purpose: it names
+        the provider ("vapi:<tool call id>"); ``id`` is the action's id everywhere.
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status520Enum'
+        project_id:
+          type: string
+        agent_id:
+          type: string
+        agent_name:
+          type: string
+        source:
+          type: object
+          additionalProperties: {}
+        customer:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        data:
+          type: object
+          additionalProperties: {}
+        steps:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        history:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        needs_retry:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - agent_id
+      - agent_name
+      - created_at
+      - customer
+      - data
+      - history
+      - id
+      - needs_retry
+      - project_id
+      - source
+      - status
+      - steps
+      - type
+      - updated_at
+    AgentActionStatus:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status520Enum'
+        note:
+          type: string
+          default: ''
+      required:
+      - status
     AnalyticsCapabilities:
       type: object
       properties:
@@ -6144,6 +6392,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/APIToken'
+    PaginatedAgentActionList:
+      type: object
+      properties:
+        count:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentAction'
+      required:
+      - count
+      - limit
+      - offset
+      - results
     PaginatedCallList:
       type: object
       properties:
@@ -6690,6 +6956,8 @@ components:
       - roles
     PermissionEnum:
       enum:
+      - actions:read
+      - actions:write
       - analytics:read
       - billing:manage
       - calls:read
@@ -6710,6 +6978,8 @@ components:
       - transcripts:write
       type: string
       description: |-
+        * `actions:read` - actions:read
+        * `actions:write` - actions:write
         * `analytics:read` - analytics:read
         * `billing:manage` - billing:manage
         * `calls:read` - calls:read
@@ -7060,6 +7330,18 @@ components:
         * `ended` - Ended
         * `failed` - Failed
         * `cancelled` - Cancelled
+    Status520Enum:
+      enum:
+      - new
+      - in_progress
+      - done
+      - cancelled
+      type: string
+      description: |-
+        * `new` - new
+        * `in_progress` - in_progress
+        * `done` - done
+        * `cancelled` - cancelled
     StatusC3bEnum:
       enum:
       - active

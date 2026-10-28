@@ -1,0 +1,22 @@
+---
+title: 'Get Agent Action'
+openapi: 'GET /api/v1/actions/{action_id}/'
+---
+
+Retrieve a single agent action with its steps and history. Requires the `actions:read` permission.
+
+## Path Parameters
+
+- `action_id` (string, required): Agent action id — the request number in notification emails
+
+## Response
+
+Same shape as an item of [List Agent Actions](/api-reference/endpoint/list-agent-actions).
+
+## Example
+
+```bash
+curl -X GET https://platform-api.sophy.co/api/v1/actions/{action_id}/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
+```

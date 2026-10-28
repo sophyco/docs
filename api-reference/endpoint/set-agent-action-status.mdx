@@ -1,0 +1,29 @@
+---
+title: 'Set Agent Action Status'
+openapi: 'POST /api/v1/actions/{action_id}/status/'
+---
+
+Advance the action's business status, e.g. when your team has called the customer back. The change and its note are appended to the action's `history`. Requires the `actions:write` permission.
+
+## Path Parameters
+
+- `action_id` (string, required): Agent action id
+
+## Body
+
+- `status` (string, required): `new`, `in_progress`, `done` or `cancelled`
+- `note` (string): Free text kept in the history entry
+
+## Response
+
+The updated action, as in [Get Agent Action](/api-reference/endpoint/get-agent-action).
+
+## Example
+
+```bash
+curl -X POST https://platform-api.sophy.co/api/v1/actions/{action_id}/status/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "in_progress", "note": "Customer called back"}'
+```

@@ -155,6 +155,15 @@
             ]
           },
           {
+            "group": "Agent Actions",
+            "pages": [
+              "api-reference/endpoint/list-agent-actions",
+              "api-reference/endpoint/get-agent-action",
+              "api-reference/endpoint/set-agent-action-status",
+              "api-reference/endpoint/retry-agent-action"
+            ]
+          },
+          {
             "group": "Outreach",
             "pages": [
               "api-reference/endpoint/list-campaigns",
