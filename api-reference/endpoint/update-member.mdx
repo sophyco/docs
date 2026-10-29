@@ -1,0 +1,6 @@
+---
+title: 'Update Member'
+openapi: 'PATCH /api/v1/organizations/{organization_id}/members/{id}/'
+---
+
+Change `role`, or `status` to `suspended` / `active`. A suspended member loses access immediately. Only owners change owners; the last active owner cannot be demoted or suspended; you cannot change your own membership. Needs `members:manage`.

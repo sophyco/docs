@@ -25,7 +25,7 @@ Inbound and outbound calls live in one list. Rows are intentionally lightweight:
 - `initiated_by` (integer): Filter by the user who confirmed and started the call in Studio
 - `platform_type` (string): Filter by platform (`vapi`, …)
 - `number` (string): Substring match against **either** number — the one dialed or the one calling
-- `date_from` / `date_to` (datetime, ISO 8601): Bound `started_at`
+- `date_from` / `date_to` (datetime, ISO 8601): Inclusive bounds on `created_at` — when the call was recorded. Not `started_at`: a call that never connected has none and would drop out of the range
 - `has_recording` (boolean): `true` returns only calls with a recording
 - `offset` (integer): Number of items to skip (default `0`)
 - `limit` (integer): Max results to return (default `100`, max `1000`)
@@ -44,7 +44,7 @@ an error — it returns `count: 0`.
 
 ## Response
 
-Returns a paginated object, ordered by `started_at` descending (newest first).
+Returns a paginated object, newest first: ordered by `started_at` descending, falling back to `ended_at` and then `created_at` for calls that never connected.
 
 ```json
 {

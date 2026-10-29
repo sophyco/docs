@@ -1,32 +1,42 @@
 ---
 title: 'Create API Token'
-openapi: 'POST /api/auth/tokens/'
+openapi: 'POST /api/v1/auth/tokens/'
 ---
 
-Create a new API token for the authenticated user.
+Create a personal API key (`suk_…`) for the logged-in user. Studio session only.
 
 <Info>
-Supports both user tokens (suk_) and service account tokens (ssk_)
+A personal key acts **as you** and can never do more than you can — if you lose access to a
+project, so does the key. For integrations that should not depend on a person, use a
+[service account](/api-reference/endpoint/create-service-account).
 </Info>
 
 ## Request Body
 
-- `type` (string, required): "user" or "service"
 - `name` (string, required): Token name/description
+- `project` (string, optional): Project UUID to bind the key to — recommended. A bound key needs no `Sophy-Project` header and is refused on any other project
+- `organization` (string, optional): Organization UUID to limit the key to. Implied by `project`
+- `scopes` (array of strings, optional): Limit the key to these permissions (see [Permissions](/api-reference/endpoint/get-permissions)). Empty = your own permissions
 - `expires_at` (string, optional): ISO 8601 expiration date (null = unlimited)
 
 ## Response
 
-Returns the newly created token.
+`201` with the key **and its secret**:
 
 ```json
 {
-  "id": "uuid",
   "token": "suk_...",
-  "type": "user",
+  "id": "uuid",
   "name": "My Production Token",
-  "user_id": "uuid",
+  "type": "user",
+  "prefix": "suk_Ab12cd34",
+  "user_id": "1",
+  "service_account_id": null,
+  "organization": "uuid",
+  "project": "uuid",
+  "scopes": ["calls:read"],
   "is_active": true,
+  "revoked_at": null,
   "expires_at": "2026-12-31T23:59:59Z",
   "last_used_at": null,
   "is_expired": false,
@@ -36,11 +46,7 @@ Returns the newly created token.
 }
 ```
 
-## Token Types
-
-- **suk_** (Sophy User Key): Personal API token
-- **ssk_** (Sophy Service Key): Service account token for automation
-
-<Note>
-Copy the token value immediately. You won't be able to see it again for security reasons.
-</Note>
+<Warning>
+`token` is returned **only here**. Sophy stores a hash of it, so it cannot be shown again — copy
+it now. Later reads show `prefix` to help you recognise the key.
+</Warning>

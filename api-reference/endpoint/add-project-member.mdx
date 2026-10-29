@@ -1,0 +1,6 @@
+---
+title: 'Add Project Member'
+openapi: 'POST /api/v1/projects/{project_id}/members/'
+---
+
+Grant an organization `member` access: `membership_id` (from [List Members](/api-reference/endpoint/list-members)) and `role` (`admin`, `editor`, `viewer`). The member must be active in the project's organization. Needs `project:manage`.

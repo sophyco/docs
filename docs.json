@@ -67,7 +67,15 @@
               "api-reference/endpoint/create-token",
               "api-reference/endpoint/get-token",
               "api-reference/endpoint/update-token",
-              "api-reference/endpoint/delete-token"
+              "api-reference/endpoint/delete-token",
+              "api-reference/endpoint/get-me",
+              "api-reference/endpoint/update-me",
+              "api-reference/endpoint/change-password",
+              "api-reference/endpoint/request-password-reset",
+              "api-reference/endpoint/confirm-password-reset",
+              "api-reference/endpoint/get-invitation",
+              "api-reference/endpoint/accept-invitation",
+              "api-reference/endpoint/get-permissions"
             ]
           },
           {
@@ -81,7 +89,46 @@
               "api-reference/endpoint/update-project",
               "api-reference/endpoint/delete-project",
               "api-reference/endpoint/get-project-settings",
-              "api-reference/endpoint/update-project-settings"
+              "api-reference/endpoint/update-project-settings",
+              "api-reference/endpoint/update-organization"
+            ]
+          },
+          {
+            "group": "Members",
+            "pages": [
+              "api-reference/endpoint/list-members",
+              "api-reference/endpoint/invite-member",
+              "api-reference/endpoint/get-member",
+              "api-reference/endpoint/update-member",
+              "api-reference/endpoint/revoke-member",
+              "api-reference/endpoint/resend-invite",
+              "api-reference/endpoint/list-project-members",
+              "api-reference/endpoint/add-project-member",
+              "api-reference/endpoint/update-project-member",
+              "api-reference/endpoint/remove-project-member"
+            ]
+          },
+          {
+            "group": "Service Accounts",
+            "pages": [
+              "api-reference/endpoint/list-service-accounts",
+              "api-reference/endpoint/create-service-account",
+              "api-reference/endpoint/get-service-account",
+              "api-reference/endpoint/update-service-account",
+              "api-reference/endpoint/delete-service-account",
+              "api-reference/endpoint/list-service-account-keys",
+              "api-reference/endpoint/create-service-account-key",
+              "api-reference/endpoint/revoke-service-account-key"
+            ]
+          },
+          {
+            "group": "Platform Users",
+            "pages": [
+              "api-reference/endpoint/list-users",
+              "api-reference/endpoint/create-user",
+              "api-reference/endpoint/get-user",
+              "api-reference/endpoint/update-user",
+              "api-reference/endpoint/resend-user-invite"
             ]
           },
           {
@@ -105,6 +152,15 @@
               "api-reference/endpoint/get-call-summary",
               "api-reference/endpoint/get-number-history",
               "api-reference/endpoint/replay-call-report"
+            ]
+          },
+          {
+            "group": "Agent Actions",
+            "pages": [
+              "api-reference/endpoint/list-agent-actions",
+              "api-reference/endpoint/get-agent-action",
+              "api-reference/endpoint/set-agent-action-status",
+              "api-reference/endpoint/retry-agent-action"
             ]
           },
           {
@@ -183,15 +239,15 @@
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {

@@ -1,0 +1,22 @@
+---
+title: 'Retry Agent Action'
+openapi: 'POST /api/v1/actions/{action_id}/retry/'
+---
+
+Run the action's workflows again in the background. Steps that already succeeded are not repeated — only failed or skipped steps run — so retrying never sends the same notification twice. Requires the `actions:write` permission.
+
+## Path Parameters
+
+- `action_id` (string, required): Agent action id
+
+## Response
+
+`202 Accepted` with the action as it was when the retry was queued. Fetch it again with [Get Agent Action](/api-reference/endpoint/get-agent-action) to see the result in `steps`.
+
+## Example
+
+```bash
+curl -X POST https://platform-api.sophy.co/api/v1/actions/{action_id}/retry/ \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
+```

@@ -54,10 +54,60 @@ paths:
                 $ref: '#/components/schemas/AnalyticsValidationError'
           description: ''
       deprecated: true
+  /api/auth/invitations/{token}/:
+    get:
+      operationId: auth_invitations_retrieve
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+          description: ''
+      deprecated: true
+  /api/auth/invitations/accept/:
+    post:
+      operationId: auth_invitations_accept_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationAccept'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InvitationAccept'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InvitationAccept'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+      deprecated: true
   /api/auth/login/:
     post:
       operationId: auth_login_create
-      description: User login endpoint. Returns JWT access + refresh tokens.
+      description: Email + password login. Returns an access token; the refresh token
+        is set as an httpOnly cookie (`sophy_refresh`, path `/api/v1/auth/`). Send
+        requests with credentials.
       tags:
       - auth
       requestBody:
@@ -79,50 +129,181 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Login'
+                $ref: '#/components/schemas/Session'
           description: ''
+      deprecated: true
   /api/auth/logout/:
     post:
       operationId: auth_logout_create
-      description: Blacklists the refresh token, invalidating the session.
+      description: End this browser session (works with an expired access token).
+      parameters:
+      - in: header
+        name: X-Sophy-CSRF
+        schema:
+          type: string
+          enum:
+          - '1'
+        description: CSRF guard for cookie-authenticated endpoints. Always `1`.
+        required: true
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+      deprecated: true
+  /api/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+      deprecated: true
+    patch:
+      operationId: auth_me_partial_update
       tags:
       - auth
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LogoutRequest'
+              $ref: '#/components/schemas/PatchedUser'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/LogoutRequest'
+              $ref: '#/components/schemas/PatchedUser'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/LogoutRequest'
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+      deprecated: true
+  /api/auth/password/change/:
+    post:
+      operationId: auth_password_change_create
+      description: Change the password. Every other session is logged out; this one
+        gets a new token pair.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
         required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+      deprecated: true
+  /api/auth/password/reset/:
+    post:
+      operationId: auth_password_reset_create
+      description: Email a reset link if an active account exists. Always 204 (no
+        account enumeration).
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+      deprecated: true
+  /api/auth/password/reset/confirm/:
+    post:
+      operationId: auth_password_reset_confirm_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+        required: true
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+      deprecated: true
+  /api/auth/permissions/:
+    get:
+      operationId: auth_permissions_retrieve
+      description: Every permission and what each role grants — for building role
+        pickers and scope lists.
+      tags:
+      - auth
       security:
       - jwtAuth: []
       - tokenAuth: []
       responses:
-        '204':
-          description: No response body
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionCatalog'
+          description: ''
+      deprecated: true
   /api/auth/token/refresh/:
     post:
       operationId: auth_token_refresh_create
-      description: Returns a new access token given a valid refresh token.
+      description: Rotate the refresh cookie and return a new access token. 401 =
+        the session is over.
+      parameters:
+      - in: header
+        name: X-Sophy-CSRF
+        schema:
+          type: string
+          enum:
+          - '1'
+        description: CSRF guard for cookie-authenticated endpoints. Always `1`.
+        required: true
       tags:
       - auth
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RefreshTokenRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/RefreshTokenRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/RefreshTokenRequest'
-        required: true
       security:
       - {}
       responses:
@@ -130,14 +311,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RefreshTokenResponse'
+                $ref: '#/components/schemas/Session'
           description: ''
+      deprecated: true
   /api/auth/tokens/:
     get:
       operationId: auth_tokens_list
       description: |-
-        API Token management for authenticated users.
-        Users can create, list, update, and delete their own tokens.
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
       parameters:
       - name: ordering
         required: false
@@ -151,12 +334,6 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
       tags:
       - auth
       security:
@@ -168,11 +345,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedAPITokenList'
           description: ''
+      deprecated: true
     post:
       operationId: auth_tokens_create
       description: |-
-        API Token management for authenticated users.
-        Users can create, list, update, and delete their own tokens.
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
       tags:
       - auth
       requestBody:
@@ -194,14 +373,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIToken'
+                $ref: '#/components/schemas/APITokenCreated'
           description: ''
+      deprecated: true
   /api/auth/tokens/{id}/:
     get:
       operationId: auth_tokens_retrieve
       description: |-
-        API Token management for authenticated users.
-        Users can create, list, update, and delete their own tokens.
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
       parameters:
       - in: path
         name: id
@@ -221,11 +402,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIToken'
           description: ''
+      deprecated: true
     patch:
       operationId: auth_tokens_partial_update
       description: |-
-        API Token management for authenticated users.
-        Users can create, list, update, and delete their own tokens.
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
       parameters:
       - in: path
         name: id
@@ -240,13 +423,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedAPIToken'
+              $ref: '#/components/schemas/PatchedUserAPITokenUpdate'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedAPIToken'
+              $ref: '#/components/schemas/PatchedUserAPITokenUpdate'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedAPIToken'
+              $ref: '#/components/schemas/PatchedUserAPITokenUpdate'
       security:
       - jwtAuth: []
       responses:
@@ -254,13 +437,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIToken'
+                $ref: '#/components/schemas/UserAPITokenUpdate'
           description: ''
+      deprecated: true
     delete:
       operationId: auth_tokens_destroy
       description: |-
-        API Token management for authenticated users.
-        Users can create, list, update, and delete their own tokens.
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
       parameters:
       - in: path
         name: id
@@ -276,266 +461,7 @@ paths:
       responses:
         '204':
           description: No response body
-  /api/billing/callback/{gateway}/:
-    post:
-      operationId: billing_callback_create
-      parameters:
-      - in: path
-        name: gateway
-        schema:
-          type: string
-        description: Payment gateway name (e.g. paytr)
-        required: true
-      tags:
-      - Billing
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GatewayCallback'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/GatewayCallback'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/GatewayCallback'
-        required: true
-      security:
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-                description: Unspecified response body
-          description: ''
-  /api/billing/payments/{id}/:
-    get:
-      operationId: billing_payments_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: Payment ID (UUID)
-        required: true
-      tags:
-      - Billing
-      security:
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Payment'
-          description: ''
-  /api/billing/payments/{id}/methods/:
-    get:
-      operationId: billing_payments_methods_retrieve
-      description: Cards the payer may reuse for this invoice, most recent first.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - Billing
-      security:
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaymentMethodList'
-          description: ''
-  /api/billing/payments/{id}/methods/{method_id}/:
-    delete:
-      operationId: billing_payments_methods_destroy
-      description: |-
-        Remove a stored card, at the gateway and here.
-
-        The row is deleted outright rather than deactivated. Its token is dead at
-        the gateway, and a dormant row would be found again by the get_or_create in
-        process_callback if the customer re-added the same card — the gateway
-        reissues the same ctoken — leaving them with a card they just added that no
-        listing shows. Both FKs to it are SET_NULL, so past invoices keep their
-        metadata['card'] copy (written when the card was attached) and any
-        subscription on it falls back to the checkout-link flow on the next run.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        required: true
-      - in: path
-        name: method_id
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - Billing
-      security:
-      - {}
-      responses:
-        '204':
-          description: No response body
-  /api/billing/payments/{id}/profile/:
-    get:
-      operationId: billing_payments_profile_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - Billing
-      security:
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BillingProfile'
-          description: ''
-    post:
-      operationId: billing_payments_profile_create
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - Billing
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BillingProfile'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BillingProfile'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BillingProfile'
-      security:
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BillingProfile'
-          description: ''
-  /api/billing/payments/{id}/token/{gateway}/:
-    post:
-      operationId: billing_payments_token_create
-      parameters:
-      - in: path
-        name: gateway
-        schema:
-          type: string
-        required: true
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - Billing
-      security:
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-                description: Unspecified response body
-          description: ''
-  /api/billing/payments/{id}/token/{gateway}/saved-card/:
-    post:
-      operationId: billing_payments_token_saved_card_create
-      description: |-
-        Form fields for paying this invoice with one of its saved cards.
-
-        The checkout posts the response to its 'action' URL; PayTR then takes the
-        cardholder through 3DS and redirects to merchant_ok_url / merchant_fail_url.
-        The card is named by PaymentMethod id — the gateway token is filled in here,
-        never sent to the client.
-      parameters:
-      - in: path
-        name: gateway
-        schema:
-          type: string
-        required: true
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - Billing
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SavedCardToken'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SavedCardToken'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/SavedCardToken'
-        required: true
-      security:
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-                description: Unspecified response body
-          description: ''
-  /api/billing/payments/{session_id}/session/:
-    get:
-      operationId: billing_payments_session_retrieve
-      parameters:
-      - in: path
-        name: session_id
-        schema:
-          type: string
-        description: Payment session ID (e.g. SPUU4V61XFW3)
-        required: true
-      tags:
-      - Billing
-      security:
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Payment'
-          description: ''
+      deprecated: true
   /api/calls/{project_id}/:
     get:
       operationId: calls_list
@@ -604,9 +530,19 @@ paths:
           type: string
         description: inbound | outbound
       - in: query
+        name: external_ref
+        schema:
+          type: string
+        description: Customer record id a Studio-started call was placed for.
+      - in: query
         name: has_recording
         schema:
           type: boolean
+      - in: query
+        name: initiated_by
+        schema:
+          type: integer
+        description: User who confirmed and started the call in Studio.
       - in: query
         name: limit
         schema:
@@ -894,32 +830,6 @@ paths:
                 $ref: '#/components/schemas/CallSummary'
           description: ''
       deprecated: true
-  /api/calls/recordings/{filename}/:
-    get:
-      operationId: calls_recordings_retrieve
-      description: |-
-        Provider-independent, permanent recording link. The email link points here;
-        on click we mint a fresh short-lived signed URL for the private S3 object
-        (key reconstructed from the self-contained filename) and 302-redirect.
-
-        Public by design — security is the unguessable filename (contains the VAPI
-        call UUID). Used when a workflow's recording.link_from is the S3 destination.
-      parameters:
-      - in: path
-        name: filename
-        schema:
-          type: string
-        description: Self-contained recording filename ({call_id}_{ts}_{assistant_id}_{type}.wav)
-        required: true
-      tags:
-      - calls
-      security:
-      - {}
-      responses:
-        '302':
-          description: No response body
-        '404':
-          description: No response body
   /api/campaigns/{project_id}/:
     get:
       operationId: campaigns_list
@@ -1160,9 +1070,7 @@ paths:
   /api/organizations/:
     get:
       operationId: organizations_list
-      description: |-
-        Organization endpoints for authenticated users.
-        Users can list and view their organization(s).
+      description: Organizations the caller belongs to. Renaming needs ``org:manage``.
       parameters:
       - name: ordering
         required: false
@@ -1176,12 +1084,6 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
       tags:
       - organizations
       security:
@@ -1194,12 +1096,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedOrganizationList'
           description: ''
+      deprecated: true
   /api/organizations/{id}/:
     get:
       operationId: organizations_retrieve
-      description: |-
-        Organization endpoints for authenticated users.
-        Users can list and view their organization(s).
+      description: Organizations the caller belongs to. Renaming needs ``org:manage``.
       parameters:
       - in: path
         name: id
@@ -1220,6 +1121,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/Organization'
           description: ''
+      deprecated: true
+    patch:
+      operationId: organizations_partial_update
+      description: Organizations the caller belongs to. Renaming needs ``org:manage``.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+      deprecated: true
   /api/organizations/{organization_id}/projects/:
     get:
       operationId: organizations_projects_list
@@ -1246,12 +1183,6 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
       tags:
       - organizations
       security:
@@ -1264,6 +1195,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedProjectList'
           description: ''
+      deprecated: true
     post:
       operationId: organizations_projects_create
       description: |-
@@ -1301,6 +1233,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
           description: ''
+      deprecated: true
   /api/organizations/{organization_id}/projects/{id}/:
     get:
       operationId: organizations_projects_retrieve
@@ -1334,6 +1267,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
           description: ''
+      deprecated: true
     patch:
       operationId: organizations_projects_partial_update
       description: |-
@@ -1377,6 +1311,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
           description: ''
+      deprecated: true
     delete:
       operationId: organizations_projects_destroy
       description: |-
@@ -1405,6 +1340,7 @@ paths:
       responses:
         '204':
           description: No response body
+      deprecated: true
   /api/organizations/{organization_id}/projects/{project_id}/settings/:
     get:
       operationId: organizations_projects_settings_retrieve
@@ -1434,6 +1370,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProjectSettings'
           description: ''
+      deprecated: true
     put:
       operationId: organizations_projects_settings_update
       description: Read or upsert one project's Mongo-backed runtime settings.
@@ -1479,99 +1416,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProjectSettings'
           description: ''
-  /api/platforms/embed/configs/:
-    get:
-      operationId: platforms_embed_configs_list
-      description: 'Every embeddable widget, so the embed service can enumerate or
-        warm them. Widgets missing a slug on either the organization or the widget
-        are omitted: they have no embed URL.'
-      summary: List embed configurations
-      parameters:
-      - in: header
-        name: Authorization
-        schema:
-          type: string
-        description: '`Bearer <EMBED_SERVICE_KEY>` — the secret shared with the embed
-          service.'
-        required: true
-      - in: query
-        name: tenant_slug
-        schema:
-          type: string
-        description: Limit the listing to one organization.
-      - in: query
-        name: updated_since
-        schema:
-          type: string
-          format: date-time
-        description: Only widgets changed at or after this timestamp (ISO 8601).
-      tags:
-      - platforms
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EmbedConfig'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-          description: ''
-  /api/platforms/embed/configs/{tenant_slug}/{widget_slug}/:
-    get:
-      operationId: platforms_embed_configs_retrieve
-      description: Configuration for a single widget, addressed the same way its embed
-        URL is. Returns 404 for an unknown, slug-less or deactivated widget.
-      summary: Retrieve one embed configuration
-      parameters:
-      - in: header
-        name: Authorization
-        schema:
-          type: string
-        description: '`Bearer <EMBED_SERVICE_KEY>` — the secret shared with the embed
-          service.'
-        required: true
-      - in: path
-        name: tenant_slug
-        schema:
-          type: string
-        description: Organization slug (first segment of the embed URL).
-        required: true
-      - in: path
-        name: widget_slug
-        schema:
-          type: string
-        description: Webchat slug (second segment of the embed URL).
-        required: true
-      tags:
-      - platforms
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EmbedConfig'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-          description: ''
+      deprecated: true
   /api/schema/:
     get:
       operationId: schema_retrieve
@@ -2034,6 +1879,182 @@ paths:
                 $ref: '#/components/schemas/LabelList'
           description: ''
       deprecated: true
+  /api/v1/actions/:
+    get:
+      operationId: actions_list
+      description: List the project's agent actions, newest first.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
+      - in: query
+        name: agent_id
+        schema:
+          type: string
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results to return (default 100, max 1000)
+      - in: query
+        name: needs_retry
+        schema:
+          type: boolean
+        description: Only actions with a failed step
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of items to skip (default 0)
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - cancelled
+          - done
+          - in_progress
+          - new
+      - in: query
+        name: type
+        schema:
+          type: string
+        description: Action type, e.g. contact_request
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAgentActionList'
+          description: ''
+  /api/v1/actions/{action_id}/:
+    get:
+      operationId: actions_retrieve
+      description: Retrieve a single agent action with its steps and history.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
+      - in: path
+        name: action_id
+        schema:
+          type: string
+        description: Agent action id
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAction'
+          description: ''
+  /api/v1/actions/{action_id}/retry/:
+    post:
+      operationId: actions_retry
+      description: |-
+        Run the action's workflows again in the background. Steps that already
+        succeeded are not repeated, so only failed or skipped steps run.
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
+      - in: path
+        name: action_id
+        schema:
+          type: string
+        description: Agent action id
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAction'
+          description: ''
+  /api/v1/actions/{action_id}/status/:
+    post:
+      operationId: actions_set_status
+      description: Advance the action's business status (new → in_progress → done
+        | cancelled).
+      parameters:
+      - in: header
+        name: Sophy-Project
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
+      - in: path
+        name: action_id
+        schema:
+          type: string
+        description: Agent action id
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentActionStatus'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgentActionStatus'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgentActionStatus'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAction'
+          description: ''
   /api/v1/analytics/:
     post:
       operationId: analytics_batch_2
@@ -2047,12 +2068,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       tags:
       - v1
       requestBody:
@@ -2083,6 +2104,398 @@ paths:
               schema:
                 $ref: '#/components/schemas/AnalyticsValidationError'
           description: ''
+  /api/v1/auth/invitations/{token}/:
+    get:
+      operationId: v1_auth_invitations_retrieve
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+          description: ''
+  /api/v1/auth/invitations/accept/:
+    post:
+      operationId: v1_auth_invitations_accept_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationAccept'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InvitationAccept'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InvitationAccept'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/auth/login/:
+    post:
+      operationId: v1_auth_login_create
+      description: Email + password login. Returns an access token; the refresh token
+        is set as an httpOnly cookie (`sophy_refresh`, path `/api/v1/auth/`). Send
+        requests with credentials.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: v1_auth_logout_create
+      description: End this browser session (works with an expired access token).
+      parameters:
+      - in: header
+        name: X-Sophy-CSRF
+        schema:
+          type: string
+          enum:
+          - '1'
+        description: CSRF guard for cookie-authenticated endpoints. Always `1`.
+        required: true
+      tags:
+      - v1
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/me/:
+    get:
+      operationId: v1_auth_me_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: v1_auth_me_partial_update
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/auth/password/change/:
+    post:
+      operationId: v1_auth_password_change_create
+      description: Change the password. Every other session is logged out; this one
+        gets a new token pair.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/auth/password/reset/:
+    post:
+      operationId: v1_auth_password_reset_create
+      description: Email a reset link if an active account exists. Always 204 (no
+        account enumeration).
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/password/reset/confirm/:
+    post:
+      operationId: v1_auth_password_reset_confirm_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+        required: true
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/permissions/:
+    get:
+      operationId: v1_auth_permissions_retrieve
+      description: Every permission and what each role grants — for building role
+        pickers and scope lists.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionCatalog'
+          description: ''
+  /api/v1/auth/token/refresh/:
+    post:
+      operationId: v1_auth_token_refresh_create
+      description: Rotate the refresh cookie and return a new access token. 401 =
+        the session is over.
+      parameters:
+      - in: header
+        name: X-Sophy-CSRF
+        schema:
+          type: string
+          enum:
+          - '1'
+        description: CSRF guard for cookie-authenticated endpoints. Always `1`.
+        required: true
+      tags:
+      - v1
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/auth/tokens/:
+    get:
+      operationId: v1_auth_tokens_list
+      description: |-
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAPITokenList'
+          description: ''
+    post:
+      operationId: v1_auth_tokens_create
+      description: |-
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/APIToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/APIToken'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APITokenCreated'
+          description: ''
+  /api/v1/auth/tokens/{id}/:
+    get:
+      operationId: v1_auth_tokens_retrieve
+      description: |-
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this api token.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIToken'
+          description: ''
+    patch:
+      operationId: v1_auth_tokens_partial_update
+      description: |-
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this api token.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserAPITokenUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserAPITokenUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserAPITokenUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAPITokenUpdate'
+          description: ''
+    delete:
+      operationId: v1_auth_tokens_destroy
+      description: |-
+        The caller's own API keys. The secret is returned once, by create;
+        DELETE revokes the key (it stops working immediately) and keeps the row
+        for audit.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this api token.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/calls/:
     get:
       operationId: calls_list_2
@@ -2090,12 +2503,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: agent_id
         schema:
@@ -2152,9 +2565,19 @@ paths:
           type: string
         description: inbound | outbound
       - in: query
+        name: external_ref
+        schema:
+          type: string
+        description: Customer record id a Studio-started call was placed for.
+      - in: query
         name: has_recording
         schema:
           type: boolean
+      - in: query
+        name: initiated_by
+        schema:
+          type: integer
+        description: User who confirmed and started the call in Studio.
       - in: query
         name: limit
         schema:
@@ -2211,12 +2634,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: call_id
         schema:
@@ -2243,12 +2666,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: call_id
         schema:
@@ -2289,12 +2712,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: call_id
         schema:
@@ -2339,12 +2762,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: limit
         schema:
@@ -2379,12 +2802,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: agent_name
         schema:
@@ -2448,12 +2871,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       tags:
       - v1
       security:
@@ -2475,12 +2898,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2509,12 +2932,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: header
         name: Idempotency-Key
         schema:
@@ -2558,12 +2981,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2602,12 +3025,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2652,12 +3075,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: header
         name: Idempotency-Key
         schema:
@@ -2702,12 +3125,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2740,12 +3163,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2772,12 +3195,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: campaign_id
         schema:
@@ -2797,6 +3220,938 @@ paths:
               schema:
                 $ref: '#/components/schemas/CampaignSyncResult'
           description: ''
+  /api/v1/organizations/:
+    get:
+      operationId: v1_organizations_list
+      description: Organizations the caller belongs to. Renaming needs ``org:manage``.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganizationList'
+          description: ''
+  /api/v1/organizations/{id}/:
+    get:
+      operationId: v1_organizations_retrieve
+      description: Organizations the caller belongs to. Renaming needs ``org:manage``.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    patch:
+      operationId: v1_organizations_partial_update
+      description: Organizations the caller belongs to. Renaming needs ``org:manage``.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/organizations/{organization_id}/members/:
+    get:
+      operationId: v1_organizations_members_list
+      description: People in an organization. Listing needs ``members:read``, changes
+        ``members:manage``.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+      - in: query
+        name: role
+        schema:
+          type: string
+          enum:
+          - admin
+          - member
+          - owner
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Matches email, first or last name
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - active
+          - revoked
+          - suspended
+        description: Revoked members are only listed when asked for
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+          description: ''
+    post:
+      operationId: v1_organizations_members_create
+      description: Add an existing account, or invite a new email (an invitation email
+        is sent). 409 if already a member.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInvite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberInvite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberInvite'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/organizations/{organization_id}/members/{id}/:
+    get:
+      operationId: v1_organizations_members_retrieve
+      description: People in an organization. Listing needs ``members:read``, changes
+        ``members:manage``.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Membership id
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+    patch:
+      operationId: v1_organizations_members_partial_update
+      description: People in an organization. Listing needs ``members:read``, changes
+        ``members:manage``.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Membership id
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberUpdate'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+    delete:
+      operationId: v1_organizations_members_destroy
+      description: 'Revoke: access ends immediately and all project grants are removed.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Membership id
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/organizations/{organization_id}/members/{id}/resend-invite/:
+    post:
+      operationId: v1_organizations_members_resend_invite_create
+      description: People in an organization. Listing needs ``members:read``, changes
+        ``members:manage``.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Membership id
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/organizations/{organization_id}/projects/:
+    get:
+      operationId: v1_organizations_projects_list
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectList'
+          description: ''
+    post:
+      operationId: v1_organizations_projects_create
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Project'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Project'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/v1/organizations/{organization_id}/projects/{id}/:
+    get:
+      operationId: v1_organizations_projects_retrieve
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    patch:
+      operationId: v1_organizations_projects_partial_update
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProject'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+    delete:
+      operationId: v1_organizations_projects_destroy
+      description: |-
+        Project endpoints for managing projects within an organization.
+        Users can create, list, update, and delete projects in their organization.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/organizations/{organization_id}/service-accounts/:
+    get:
+      operationId: v1_organizations_service_accounts_list
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceAccount'
+          description: ''
+    post:
+      operationId: v1_organizations_service_accounts_create
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAccount'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceAccount'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceAccount'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccount'
+          description: ''
+  /api/v1/organizations/{organization_id}/service-accounts/{service_account_id}/:
+    get:
+      operationId: v1_organizations_service_accounts_retrieve
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      - in: path
+        name: service_account_id
+        schema:
+          type: string
+          format: uuid
+        description: Service account UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccount'
+          description: ''
+    patch:
+      operationId: v1_organizations_service_accounts_partial_update
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      - in: path
+        name: service_account_id
+        schema:
+          type: string
+          format: uuid
+        description: Service account UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceAccount'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceAccount'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceAccount'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccount'
+          description: ''
+    delete:
+      operationId: v1_organizations_service_accounts_destroy
+      description: Deactivate the account and revoke all of its keys. The row is kept
+        for audit.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      - in: path
+        name: service_account_id
+        schema:
+          type: string
+          format: uuid
+        description: Service account UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/organizations/{organization_id}/service-accounts/{service_account_id}/keys/:
+    get:
+      operationId: v1_organizations_service_accounts_keys_list
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      - in: path
+        name: service_account_id
+        schema:
+          type: string
+          format: uuid
+        description: Service account UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/APIToken'
+          description: ''
+    post:
+      operationId: v1_organizations_service_accounts_keys_create
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      - in: path
+        name: service_account_id
+        schema:
+          type: string
+          format: uuid
+        description: Service account UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAccountKeyCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceAccountKeyCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceAccountKeyCreate'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APITokenCreated'
+          description: ''
+  /api/v1/organizations/{organization_id}/service-accounts/{service_account_id}/keys/{key_id}/:
+    delete:
+      operationId: v1_organizations_service_accounts_keys_destroy
+      parameters:
+      - in: path
+        name: key_id
+        schema:
+          type: string
+          format: uuid
+        description: API key UUID
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: Organization UUID
+        required: true
+      - in: path
+        name: service_account_id
+        schema:
+          type: string
+          format: uuid
+        description: Service account UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/projects/{project_id}/members/:
+    get:
+      operationId: v1_projects_members_list
+      description: Who can reach a project. Listing needs ``project:read``, changes
+        ``project:manage``.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectMember'
+          description: ''
+    post:
+      operationId: v1_projects_members_create
+      description: Who can reach a project. Listing needs ``project:read``, changes
+        ``project:manage``.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectMemberCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectMemberCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectMemberCreate'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+          description: ''
+  /api/v1/projects/{project_id}/members/{id}/:
+    patch:
+      operationId: v1_projects_members_partial_update
+      description: Who can reach a project. Listing needs ``project:read``, changes
+        ``project:manage``.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectMemberUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectMemberUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectMemberUpdate'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+          description: ''
+    delete:
+      operationId: v1_projects_members_destroy
+      description: Who can reach a project. Listing needs ``project:read``, changes
+        ``project:manage``.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        description: Project UUID
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/projects/{project_id}/settings/:
+    get:
+      operationId: v1_projects_settings_retrieve
+      description: Read or upsert one project's Mongo-backed runtime settings.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSettings'
+          description: ''
+    put:
+      operationId: v1_projects_settings_update
+      description: Read or upsert one project's Mongo-backed runtime settings.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSettings'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSettings'
+          description: ''
   /api/v1/transcripts/:
     get:
       operationId: v1_transcripts_retrieve
@@ -2804,12 +4159,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: conversationID
         schema:
@@ -2865,12 +4220,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: transcript_id
         schema:
@@ -2907,12 +4262,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: transcript_id
         schema:
@@ -2949,12 +4304,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: transcript_id
         schema:
@@ -2991,12 +4346,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: path
         name: transcript_id
         schema:
@@ -3033,12 +4388,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       - in: query
         name: conversationID
         schema:
@@ -3094,12 +4449,12 @@ paths:
       parameters:
       - in: header
         name: Sophy-Project
-        required: false
+        required: true
         schema:
           type: string
           format: uuid
-        description: Project the request acts on. Required for Studio (JWT) sessions
-          and unbound API keys; omitted for API keys bound to a project.
+        description: Project the request acts on. API keys bound to a project may
+          omit it; when sent, it must match the key's project.
       tags:
       - v1
       security:
@@ -3112,61 +4467,209 @@ paths:
               schema:
                 $ref: '#/components/schemas/LabelList'
           description: ''
-  /api/workflows/recordings/{filename}/:
+  /api/v1/users/:
     get:
-      operationId: workflows_recordings_retrieve
-      description: |-
-        Provider-independent, permanent recording link. The email link points here;
-        on click we mint a fresh short-lived signed URL for the private S3 object
-        (key reconstructed from the self-contained filename) and 302-redirect.
-
-        Public by design — security is the unguessable filename (contains the VAPI
-        call UUID). Used when a workflow's recording.link_from is the S3 destination.
+      operationId: v1_users_list
       parameters:
-      - in: path
-        name: filename
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: organization
         schema:
           type: string
-        description: Self-contained recording filename ({call_id}_{ts}_{assistant_id}_{type}.wav)
+          format: uuid
+        description: Members of this organization (not revoked)
+      - in: query
+        name: page
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: string
+          format: uuid
+        description: 'Who can reach this project: its organization''s owners/admins
+          and members granted the project'
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: type
+        schema:
+          type: string
+          enum:
+          - account_manager
+          - customer
+          - staff
+          - superuser
+        description: Highest Sophy flag, or customer for none
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlatformUser'
+          description: ''
+    post:
+      operationId: v1_users_create
+      description: Create an account in an organization; an invitation email is sent.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformUserCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlatformUserCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlatformUserCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformUser'
+          description: ''
+  /api/v1/users/{id}/:
+    get:
+      operationId: v1_users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
         required: true
       tags:
-      - workflows
+      - v1
       security:
-      - {}
+      - jwtAuth: []
       responses:
-        '302':
-          description: No response body
-        '404':
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformUser'
+          description: ''
+    patch:
+      operationId: v1_users_partial_update
+      description: Deactivating ends every session at once and stops the user's API
+        keys.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatformUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatformUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatformUser'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformUser'
+          description: ''
+  /api/v1/users/{id}/resend-invite/:
+    post:
+      operationId: v1_users_resend_invite_create
+      description: Email a fresh invitation (through their latest membership). Only
+        for invited accounts that never set a password; 400 otherwise.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
           description: No response body
 components:
   schemas:
     APIToken:
       type: object
+      description: Safe key metadata. The secret is never part of it — see APITokenCreatedSerializer.
       properties:
         id:
           type: string
           format: uuid
           readOnly: true
-        token:
-          type: string
-          readOnly: true
-        type:
-          $ref: '#/components/schemas/APITokenTypeEnum'
         name:
           type: string
           description: Token name/description
           maxLength: 255
+        type:
+          allOf:
+          - $ref: '#/components/schemas/Type1c2Enum'
+          readOnly: true
+        prefix:
+          type: string
+          readOnly: true
+          description: First characters of the secret, shown so a key can be recognised.
+        user_id:
+          type: string
+          readOnly: true
+          nullable: true
+        service_account_id:
+          type: string
+          readOnly: true
+          nullable: true
+        organization:
+          type: string
+          format: uuid
+          nullable: true
+          description: Limit the key to one organization. Implied by `project`.
         project:
           type: string
           format: uuid
           nullable: true
           description: Bind the key to one project (recommended). Requests with a
             bound key need no Sophy-Project header.
-        user_id:
-          type: string
-          readOnly: true
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionEnum'
+          description: Limit the key to these permissions. Empty = the owner's permissions.
+            A key never exceeds its owner, whatever its scopes say.
         is_active:
           type: boolean
+          readOnly: true
+        revoked_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
         expires_at:
           type: string
           format: date-time
@@ -3175,6 +4678,7 @@ components:
         last_used_at:
           type: string
           format: date-time
+          readOnly: true
           nullable: true
         is_expired:
           type: boolean
@@ -3182,6 +4686,11 @@ components:
         is_valid:
           type: boolean
           readOnly: true
+        is_legacy:
+          type: boolean
+          readOnly: true
+          description: Issued by the old key system; deprecated, to be replaced with
+            a new key.
         created_at:
           type: string
           format: date-time
@@ -3193,28 +4702,192 @@ components:
       required:
       - created_at
       - id
+      - is_active
       - is_expired
+      - is_legacy
       - is_valid
+      - last_used_at
       - name
-      - token
+      - prefix
+      - revoked_at
+      - service_account_id
+      - type
       - updated_at
       - user_id
-    APITokenTypeEnum:
-      enum:
-      - user
-      - service
-      type: string
+    APITokenCreated:
+      type: object
+      description: 'Returned once, on creation: the only response that carries the
+        secret.'
+      properties:
+        token:
+          type: string
+          readOnly: true
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          description: Token name/description
+          maxLength: 255
+        type:
+          allOf:
+          - $ref: '#/components/schemas/Type1c2Enum'
+          readOnly: true
+        prefix:
+          type: string
+          readOnly: true
+          description: First characters of the secret, shown so a key can be recognised.
+        user_id:
+          type: string
+          readOnly: true
+          nullable: true
+        service_account_id:
+          type: string
+          readOnly: true
+          nullable: true
+        organization:
+          type: string
+          format: uuid
+          nullable: true
+          description: Limit the key to one organization. Implied by `project`.
+        project:
+          type: string
+          format: uuid
+          nullable: true
+          description: Bind the key to one project (recommended). Requests with a
+            bound key need no Sophy-Project header.
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionEnum'
+          description: Limit the key to these permissions. Empty = the owner's permissions.
+            A key never exceeds its owner, whatever its scopes say.
+        is_active:
+          type: boolean
+          readOnly: true
+        revoked_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Token expiration date. Leave blank for unlimited.
+        last_used_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        is_expired:
+          type: boolean
+          readOnly: true
+        is_valid:
+          type: boolean
+          readOnly: true
+        is_legacy:
+          type: boolean
+          readOnly: true
+          description: Issued by the old key system; deprecated, to be replaced with
+            a new key.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - is_active
+      - is_expired
+      - is_legacy
+      - is_valid
+      - last_used_at
+      - name
+      - prefix
+      - revoked_at
+      - service_account_id
+      - token
+      - type
+      - updated_at
+      - user_id
+    AgentAction:
+      type: object
       description: |-
-        * `user` - User Token
-        * `service` - Service Account Token
-    AccountTypeEnum:
-      enum:
-      - individual
-      - business
-      type: string
-      description: |-
-        * `individual` - Individual
-        * `business` - Business
+        An AgentAction as Studio shows it. ``key`` is left out on purpose: it names
+        the provider ("vapi:<tool call id>"); ``id`` is the action's id everywhere.
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status520Enum'
+        project_id:
+          type: string
+        agent_id:
+          type: string
+        agent_name:
+          type: string
+        source:
+          type: object
+          additionalProperties: {}
+        customer:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        data:
+          type: object
+          additionalProperties: {}
+        steps:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        history:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        needs_retry:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - agent_id
+      - agent_name
+      - created_at
+      - customer
+      - data
+      - history
+      - id
+      - needs_retry
+      - project_id
+      - source
+      - status
+      - steps
+      - type
+      - updated_at
+    AgentActionStatus:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status520Enum'
+        note:
+          type: string
+          default: ''
+      required:
+      - status
     AnalyticsCapabilities:
       type: object
       properties:
@@ -3339,42 +5012,6 @@ components:
             Defaults to 30.
         existing_transcripts:
           $ref: '#/components/schemas/ExistingTranscripts'
-    BackendEnum:
-      enum:
-      - native
-      - chatwoot
-      type: string
-      description: |-
-        * `native` - native
-        * `chatwoot` - chatwoot
-    BillingProfile:
-      type: object
-      properties:
-        account_type:
-          $ref: '#/components/schemas/AccountTypeEnum'
-        first_name:
-          type: string
-          maxLength: 150
-        last_name:
-          type: string
-          maxLength: 150
-        company_name:
-          type: string
-          maxLength: 255
-        tax_id:
-          type: string
-          maxLength: 20
-        phone:
-          type: string
-          maxLength: 30
-        email:
-          type: string
-          format: email
-          maxLength: 254
-        address: {}
-        po_number:
-          type: string
-          maxLength: 100
     BlankEnum:
       enum:
       - ''
@@ -3447,8 +5084,9 @@ components:
           readOnly: true
         run_attempt_no:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         external_ref:
           type: string
           description: Customer's record id the call was started from (e.g. an order
@@ -3626,8 +5264,9 @@ components:
           readOnly: true
         run_attempt_no:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         external_ref:
           type: string
           description: Customer's record id the call was started from (e.g. an order
@@ -3839,20 +5478,24 @@ components:
           readOnly: true
         outbound_attempts:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         outbound_answered:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         inbound_calls:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         inbound_answered:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         total_calls:
           type: integer
           readOnly: true
@@ -4096,145 +5739,6 @@ components:
       description: |-
         * `inbound` - Inbound
         * `outbound` - Outbound
-    EmbedChatwoot:
-      type: object
-      description: Present only when the widget runs against Chatwoot instead of the
-        native runtime.
-      properties:
-        baseURL:
-          type: string
-          description: Browser-facing ChatDash origin, without the /api suffix.
-        inboxIdentifier:
-          type: string
-          description: Chatwoot public inbox identifier (not the numeric inbox id).
-      required:
-      - baseURL
-      - inboxIdentifier
-    EmbedConfig:
-      type: object
-      description: |-
-        Everything the embed service needs to render one widget's script.
-
-        Mirrors the argument the widget bundle expects at
-        ``window.sophy.chat.load()``, plus the few fields the service needs to build
-        the script around it. Branding is NOT included: the bundle fetches that from
-        the publishing endpoint itself, and duplicating it would create a second
-        source of truth for the same fields.
-      properties:
-        tenant:
-          type: string
-          description: Organization slug; first segment of the embed URL.
-        widget:
-          type: string
-          description: Webchat slug; second segment of the embed URL.
-        bundle:
-          type: string
-          description: Widget runtime bundle the script injects.
-        backend:
-          allOf:
-          - $ref: '#/components/schemas/BackendEnum'
-          description: |-
-            Derived from the widget's Channel, not stored on the widget.
-
-            * `native` - native
-            * `chatwoot` - chatwoot
-        verify:
-          $ref: '#/components/schemas/EmbedVerify'
-        url:
-          type: string
-          description: Runtime base URL the widget posts to.
-        versionID:
-          allOf:
-          - $ref: '#/components/schemas/VersionIDEnum'
-          description: |-
-            Published version of the agent the widget talks to.
-
-            * `production` - production
-            * `development` - development
-        identity:
-          type: object
-          additionalProperties: {}
-          description: 'How the visitor is resolved on the host page, e.g. {''adapter'':
-            ''ticimax''}. Known adapters: none, ticimax, localstorage.'
-        proactive:
-          type: array
-          items:
-            $ref: '#/components/schemas/EmbedProactive'
-        assistant:
-          type: object
-          additionalProperties: {}
-          description: 'Loader-level assistant overrides: inputLauncher, and position/launcherPosition/chatPosition
-            from [''left'', ''right'', ''center''].'
-        user:
-          type: object
-          additionalProperties: {}
-          description: 'Guest fallback, e.g. {''name'': ''Guest User''}.'
-        render:
-          type: object
-          additionalProperties: {}
-          description: 'Mount target, e.g. {''mode'': ''overlay''}. Modes: [''overlay'',
-            ''embedded'', ''sidebar''].'
-        analytics:
-          description: true, false, or 'dataLayer'. Absent → the bundle's default
-            (true).
-        language:
-          allOf:
-          - $ref: '#/components/schemas/LanguageEnum'
-          description: |-
-            Widget UI language.
-
-            * `en` - en
-            * `tr` - tr
-            * `de` - de
-        allowDangerousHTML:
-          type: boolean
-          description: Render raw HTML in assistant messages.
-        chatwoot:
-          allOf:
-          - $ref: '#/components/schemas/EmbedChatwoot'
-          description: Present only when backend is 'chatwoot'.
-        launch:
-          type: object
-          additionalProperties: {}
-          description: 'Launch event for the native runtime, e.g. {''event'': {''type'':
-            ''launch'', ''payload'': {...}}}. Absent when backend is ''chatwoot'',
-            which has no equivalent.'
-      required:
-      - assistant
-      - backend
-      - bundle
-      - identity
-      - proactive
-      - render
-      - tenant
-      - url
-      - user
-      - verify
-      - versionID
-      - widget
-    EmbedProactive:
-      type: object
-      description: A nudge the embed service schedules after the widget loads.
-      properties:
-        message:
-          type: string
-        delayMs:
-          type: integer
-          minimum: 0
-          description: Delay after load, in milliseconds.
-      required:
-      - delayMs
-      - message
-    EmbedVerify:
-      type: object
-      description: Identity the widget bundle sends back to the runtime.
-      properties:
-        projectID:
-          type: string
-          format: uuid
-          description: The Webchat's id. Sent as verify.projectID by the bundle.
-      required:
-      - projectID
     ExistingTranscripts:
       type: object
       properties:
@@ -4250,29 +5754,39 @@ components:
             are skipped unless enabled.
       required:
       - cutoff_at
-    GatewayCallback:
+    Invitation:
       type: object
       properties:
-        merchant_oid:
+        email:
           type: string
-        status:
+          format: email
+        organization:
+          $ref: '#/components/schemas/OrganizationRef'
+        role:
           type: string
+        needs_password:
+          type: boolean
       required:
-      - merchant_oid
-      - status
-    GatewayEnum:
-      enum:
-      - paytr
-      type: string
-      description: '* `paytr` - PayTR'
-    KindEnum:
-      enum:
-      - initial
-      - recurring
-      type: string
-      description: |-
-        * `initial` - Initial
-        * `recurring` - Recurring
+      - email
+      - needs_password
+      - organization
+      - role
+    InvitationAccept:
+      type: object
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+      required:
+      - token
     LabelList:
       type: object
       properties:
@@ -4282,16 +5796,6 @@ components:
             type: string
       required:
       - labels
-    LanguageEnum:
-      enum:
-      - en
-      - tr
-      - de
-      type: string
-      description: |-
-        * `en` - en
-        * `tr` - tr
-        * `de` - de
     Login:
       type: object
       properties:
@@ -4302,29 +5806,9 @@ components:
         password:
           type: string
           writeOnly: true
-        access_token:
-          type: string
-          readOnly: true
-        refresh_token:
-          type: string
-          readOnly: true
-        user:
-          allOf:
-          - $ref: '#/components/schemas/User'
-          readOnly: true
       required:
-      - access_token
       - email
       - password
-      - refresh_token
-      - user
-    LogoutRequest:
-      type: object
-      properties:
-        refresh_token:
-          type: string
-      required:
-      - refresh_token
     MediumEnum:
       enum:
       - voice
@@ -4333,6 +5817,111 @@ components:
       description: |-
         * `voice` - Voice
         * `text` - Text
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/MemberUser'
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/Role978Enum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusC3bEnum'
+          readOnly: true
+        invited_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        project_count:
+          type: integer
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - invited_by
+      - project_count
+      - role
+      - status
+      - user
+    MemberInvite:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          allOf:
+          - $ref: '#/components/schemas/Role978Enum'
+          default: member
+        first_name:
+          type: string
+          default: ''
+          maxLength: 150
+        last_name:
+          type: string
+          default: ''
+          maxLength: 150
+      required:
+      - email
+    MemberUpdateStatusEnum:
+      enum:
+      - active
+      - suspended
+      type: string
+      description: |-
+        * `active` - Active
+        * `suspended` - Suspended
+    MemberUser:
+      type: object
+      description: |-
+        A person shown next to a record. Sophy employees render as null to customers.
+
+        Fails closed: without a request in the context they are hidden too.
+      properties:
+        id:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        is_sophy:
+          type: boolean
+          readOnly: true
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        last_login:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - email
+      - first_name
+      - id
+      - is_sophy
+      - last_name
     NullEnum:
       enum:
       - null
@@ -4379,11 +5968,32 @@ components:
         project_count:
           type: integer
           readOnly: true
+        my_role:
+          type: string
+          nullable: true
+          readOnly: true
+        my_permissions:
+          type: array
+          items:
+            type: string
+          readOnly: true
       required:
       - created_at
       - id
+      - my_permissions
+      - my_role
       - name
       - project_count
+    OrganizationRef:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+      - id
+      - name
     OriginEnum:
       enum:
       - inbound
@@ -4782,6 +6392,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/APIToken'
+    PaginatedAgentActionList:
+      type: object
+      properties:
+        count:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentAction'
+      required:
+      - count
+      - limit
+      - offset
+      - results
     PaginatedCallList:
       type: object
       properties:
@@ -4903,55 +6531,126 @@ components:
       - limit
       - offset
       - results
-    PatchedAPIToken:
+    PasswordChange:
+      type: object
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+        new_password:
+          type: string
+          writeOnly: true
+      required:
+      - current_password
+      - new_password
+    PasswordResetConfirm:
+      type: object
+      properties:
+        uid:
+          type: string
+        token:
+          type: string
+        new_password:
+          type: string
+          writeOnly: true
+      required:
+      - new_password
+      - token
+      - uid
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    PatchedMemberUpdate:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/Role978Enum'
+        status:
+          $ref: '#/components/schemas/MemberUpdateStatusEnum'
+    PatchedOrganization:
       type: object
       properties:
         id:
           type: string
           format: uuid
           readOnly: true
-        token:
-          type: string
-          readOnly: true
-        type:
-          $ref: '#/components/schemas/APITokenTypeEnum'
         name:
           type: string
-          description: Token name/description
           maxLength: 255
-        project:
-          type: string
-          format: uuid
-          nullable: true
-          description: Bind the key to one project (recommended). Requests with a
-            bound key need no Sophy-Project header.
-        user_id:
-          type: string
-          readOnly: true
-        is_active:
-          type: boolean
-        expires_at:
-          type: string
-          format: date-time
-          nullable: true
-          description: Token expiration date. Leave blank for unlimited.
-        last_used_at:
-          type: string
-          format: date-time
-          nullable: true
-        is_expired:
-          type: boolean
-          readOnly: true
-        is_valid:
-          type: boolean
-          readOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        project_count:
+          type: integer
+          readOnly: true
+        my_role:
+          type: string
+          nullable: true
+          readOnly: true
+        my_permissions:
+          type: array
+          items:
+            type: string
+          readOnly: true
+    PatchedPlatformUser:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+        is_account_manager:
+          type: boolean
+          description: 'Sophy employee without Django admin access: hidden from customers,
+            full access in the organizations and projects they are assigned to.'
+        is_invited:
+          type: boolean
+          readOnly: true
+        last_login:
           type: string
           format: date-time
+          readOnly: true
+          nullable: true
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserMembership'
           readOnly: true
     PatchedProject:
       type: object
@@ -4976,6 +6675,59 @@ components:
         updated_at:
           type: string
           format: date-time
+          readOnly: true
+        my_role:
+          type: string
+          nullable: true
+          readOnly: true
+        my_permissions:
+          type: array
+          items:
+            type: string
+          readOnly: true
+    PatchedProjectMemberUpdate:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/RoleCc3Enum'
+    PatchedServiceAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        project:
+          type: string
+          format: uuid
+          nullable: true
+          description: Restrict the account to one project. Null = every project of
+            the organization.
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionEnum'
+        is_active:
+          type: boolean
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        key_count:
+          type: integer
           readOnly: true
     PatchedSetLabelsRequest:
       type: object
@@ -5028,183 +6780,312 @@ components:
         updatedAt:
           type: string
           format: date-time
-    Payment:
+    PatchedUser:
       type: object
       description: |-
-        Public checkout payload. Both views using it are AllowAny with no auth.
+        Canonical user payload returned by login and /auth/me/.
 
-        gateway_response/gateway_events are deliberately absent: they carry the raw
-        PayTR payload (hash, merchant_oid, webhook history) and merchant-side error
-        text. Failures surface through failure_code/failure_message instead. metadata
-        is projected through explicit nested serializers so a new internal key added
-        to it never leaks.
+        ``is_superuser`` / ``is_staff`` / ``is_account_manager`` are platform-level flags (unrelated to the
+        org-scoped membership roles) and are read-only — they can only be granted
+        from Django admin, never through the API. They are also dropped from the
+        payload when false, so they only ship to the handful of accounts that hold
+        them. Consumers must treat an absent flag as false (fail closed).
+
+        ``role`` is the deprecated global role; use ``memberships[].role``.
+      properties:
+        id:
+          type: string
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        role:
+          allOf:
+          - $ref: '#/components/schemas/UserRoleEnum'
+          readOnly: true
+        organization_ids:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserMembership'
+          readOnly: true
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+        is_account_manager:
+          type: boolean
+          readOnly: true
+          description: 'Sophy employee without Django admin access: hidden from customers,
+            full access in the organizations and projects they are assigned to.'
+    PatchedUserAPITokenUpdate:
+      type: object
+      description: Binding is fixed at creation; only the label, scopes and expiry
+        change.
       properties:
         id:
           type: string
           format: uuid
           readOnly: true
-        organization_name:
+        name:
           type: string
-          readOnly: true
-        gateway:
-          $ref: '#/components/schemas/GatewayEnum'
-        amount_cents:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        currency:
-          type: string
-          maxLength: 10
-        kind:
-          $ref: '#/components/schemas/KindEnum'
-        status:
-          $ref: '#/components/schemas/StatusEnum'
-        items:
-          description: "\n        Each item:\n        - name: str\n        - kind:
-            one-time | recurring\n        - quantity: int\n        - unit_price_cents:
-            int (USD source or display currency)\n        - amount_cents: int (unit_price_cents
-            * quantity)\n        - currency: str (display only)\n        "
-        pricing:
+          description: Token name/description
+          maxLength: 255
+        type:
           allOf:
-          - $ref: '#/components/schemas/PaymentPricing'
-          nullable: true
+          - $ref: '#/components/schemas/Type1c2Enum'
           readOnly: true
-        fx:
-          allOf:
-          - $ref: '#/components/schemas/PaymentFx'
-          nullable: true
-          readOnly: true
-        failure_code:
+        prefix:
           type: string
-          nullable: true
           readOnly: true
-        failure_message:
+          description: First characters of the secret, shown so a key can be recognised.
+        user_id:
           type: string
-          nullable: true
           readOnly: true
+          nullable: true
+        service_account_id:
+          type: string
+          readOnly: true
+          nullable: true
+        organization:
+          type: string
+          format: uuid
+          nullable: true
+          description: Limit the key to one organization. Implied by `project`.
+        project:
+          type: string
+          format: uuid
+          nullable: true
+          description: Bind the key to one project (recommended). Requests with a
+            bound key need no Sophy-Project header.
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionEnum'
+          description: Limit the key to these permissions. Empty = the owner's permissions.
+            A key never exceeds its owner, whatever its scopes say.
+        is_active:
+          type: boolean
+          readOnly: true
+        revoked_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
         expires_at:
           type: string
           format: date-time
           nullable: true
+          description: Token expiration date. Leave blank for unlimited.
+        last_used_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        is_expired:
+          type: boolean
+          readOnly: true
+        is_valid:
+          type: boolean
+          readOnly: true
+        is_legacy:
+          type: boolean
+          readOnly: true
+          description: Issued by the old key system; deprecated, to be replaced with
+            a new key.
         created_at:
           type: string
           format: date-time
           readOnly: true
-        is_expired:
-          type: boolean
+        updated_at:
+          type: string
+          format: date-time
           readOnly: true
-      required:
-      - created_at
-      - failure_code
-      - failure_message
-      - fx
-      - id
-      - is_expired
-      - organization_name
-      - pricing
-    PaymentFx:
+    PermissionCatalog:
       type: object
       properties:
-        from:
-          type: string
-        to:
-          type: string
-        rate:
-          type: number
-          format: double
-        subtotal:
-          type: integer
-        rate_date:
-          type: string
-          nullable: true
-        rate_source:
-          type: string
-          nullable: true
-        rate_quote:
-          type: string
-          nullable: true
-        rate_updated_at:
-          type: string
-          nullable: true
-    PaymentMethod:
-      type: object
+        organization:
+          type: array
+          items:
+            type: string
+        project:
+          type: array
+          items:
+            type: string
+        roles:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                type: string
+      required:
+      - organization
+      - project
+      - roles
+    PermissionEnum:
+      enum:
+      - actions:read
+      - actions:write
+      - analytics:read
+      - billing:manage
+      - calls:read
+      - calls:write
+      - campaigns:read
+      - campaigns:run
+      - campaigns:write
+      - keys:manage
+      - members:manage
+      - members:read
+      - messages:send
+      - org:manage
+      - org:read
+      - project:manage
+      - project:read
+      - projects:create
+      - transcripts:read
+      - transcripts:write
+      type: string
       description: |-
-        A stored card as the checkout page may show it.
-
-        gateway_token (PayTR ctoken) is deliberately absent: the card endpoints are
-        AllowAny, so the client names a card by its PaymentMethod id and the token is
-        resolved server-side. The cardholder name in metadata is left out for the
-        same reason — last 4 + brand + bank identify the card without adding PII to
-        a payload anyone holding the link can read.
+        * `actions:read` - actions:read
+        * `actions:write` - actions:write
+        * `analytics:read` - analytics:read
+        * `billing:manage` - billing:manage
+        * `calls:read` - calls:read
+        * `calls:write` - calls:write
+        * `campaigns:read` - campaigns:read
+        * `campaigns:run` - campaigns:run
+        * `campaigns:write` - campaigns:write
+        * `keys:manage` - keys:manage
+        * `members:manage` - members:manage
+        * `members:read` - members:read
+        * `messages:send` - messages:send
+        * `org:manage` - org:manage
+        * `org:read` - org:read
+        * `project:manage` - project:manage
+        * `project:read` - project:read
+        * `projects:create` - projects:create
+        * `transcripts:read` - transcripts:read
+        * `transcripts:write` - transcripts:write
+    PlatformUser:
+      type: object
       properties:
         id:
           type: string
-          format: uuid
           readOnly: true
-        card_brand:
+        email:
           type: string
-          maxLength: 50
-        card_last_4:
-          type: string
-          maxLength: 4
-        bank:
-          type: string
+          format: email
           readOnly: true
-        exp_month:
+          title: Email address
+        first_name:
           type: string
-          readOnly: true
-        exp_year:
+          maxLength: 150
+        last_name:
           type: string
-          readOnly: true
-        require_cvv:
+          maxLength: 150
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        is_superuser:
           type: boolean
           readOnly: true
-      required:
-      - bank
-      - exp_month
-      - exp_year
-      - id
-      - require_cvv
-    PaymentMethodList:
-      type: object
-      description: 'The card picker''s payload: the cards, and which one the invoice
-        is on.'
-      properties:
-        selected_id:
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+        is_account_manager:
+          type: boolean
+          description: 'Sophy employee without Django admin access: hidden from customers,
+            full access in the organizations and projects they are assigned to.'
+        is_invited:
+          type: boolean
+          readOnly: true
+        last_login:
           type: string
-          format: uuid
+          format: date-time
+          readOnly: true
           nullable: true
-        methods:
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        memberships:
           type: array
           items:
-            $ref: '#/components/schemas/PaymentMethod'
+            $ref: '#/components/schemas/UserMembership'
+          readOnly: true
       required:
-      - methods
-      - selected_id
-    PaymentPricing:
+      - date_joined
+      - email
+      - id
+      - is_invited
+      - is_staff
+      - is_superuser
+      - last_login
+      - memberships
+    PlatformUserCreate:
       type: object
-      description: |-
-        The pricing breakdown a checkout page renders. See Payment.metadata help_text.
-
-        Every field is optional: metadata is written by management commands with no
-        schema, and older rows predate some keys.
       properties:
-        base_type:
+        email:
           type: string
-        discount_type:
+          format: email
+        first_name:
           type: string
-        discount_cents:
-          type: integer
-        discount_percentage:
-          type: integer
-        tax_rate:
-          type: integer
-        net_amount_cents:
-          type: integer
-        tax_amount_cents:
-          type: integer
-        final_amount:
-          type: integer
+          default: ''
+          maxLength: 150
+        last_name:
+          type: string
+          default: ''
+          maxLength: 150
+        organization:
+          type: string
+          format: uuid
+          description: New accounts always join an organization.
+        role:
+          allOf:
+          - $ref: '#/components/schemas/Role978Enum'
+          default: member
+      required:
+      - email
+      - organization
     PrivacyMasking:
       type: object
       properties:
@@ -5241,13 +7122,62 @@ components:
           type: string
           format: date-time
           readOnly: true
+        my_role:
+          type: string
+          nullable: true
+          readOnly: true
+        my_permissions:
+          type: array
+          items:
+            type: string
+          readOnly: true
       required:
       - created_at
       - id
+      - my_permissions
+      - my_role
       - name
       - organization_id
       - organization_name
       - updated_at
+    ProjectMember:
+      type: object
+      description: A project grant, or an org owner/admin's implicit access (``inherited``,
+        not editable).
+      properties:
+        id:
+          type: integer
+          nullable: true
+        membership_id:
+          type: integer
+        user:
+          $ref: '#/components/schemas/UserRef'
+        role:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        inherited:
+          type: boolean
+      required:
+      - created_at
+      - id
+      - inherited
+      - membership_id
+      - role
+      - user
+    ProjectMemberCreate:
+      type: object
+      properties:
+        membership_id:
+          type: integer
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleCc3Enum'
+          default: viewer
+      required:
+      - membership_id
     ProjectSettings:
       type: object
       properties:
@@ -5287,43 +7217,103 @@ components:
       required:
       - status
       - task_id
-    RefreshTokenRequest:
-      type: object
-      properties:
-        refresh_token:
-          type: string
-      required:
-      - refresh_token
-    RefreshTokenResponse:
-      type: object
-      properties:
-        access_token:
-          type: string
-      required:
-      - access_token
-    RoleEnum:
+    Role978Enum:
       enum:
       - owner
       - admin
-      - agent
+      - member
       type: string
       description: |-
         * `owner` - Owner
         * `admin` - Admin
-        * `agent` - Agent
-    SavedCardToken:
-      type: object
+        * `member` - Member
+    RoleCc3Enum:
+      enum:
+      - admin
+      - editor
+      - viewer
+      type: string
       description: |-
-        Request body for paying an invoice with an already-stored card.
-
-        Only the card is named. CVV, when the card requires one, is typed into the
-        form the browser posts to PayTR and never passes through us.
+        * `admin` - Admin
+        * `editor` - Editor
+        * `viewer` - Viewer
+    ServiceAccount:
+      type: object
       properties:
-        payment_method_id:
+        id:
           type: string
           format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        project:
+          type: string
+          format: uuid
+          nullable: true
+          description: Restrict the account to one project. Null = every project of
+            the organization.
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionEnum'
+        is_active:
+          type: boolean
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        key_count:
+          type: integer
+          readOnly: true
       required:
-      - payment_method_id
+      - created_at
+      - created_by
+      - id
+      - key_count
+      - name
+      - updated_at
+    ServiceAccountKeyCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        project:
+          type: string
+          format: uuid
+          nullable: true
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionEnum'
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - name
+    Session:
+      type: object
+      description: Login / refresh / password-change response. The refresh token travels
+        as an httpOnly cookie.
+      properties:
+        access_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+      - access_token
     StateFf0Enum:
       enum:
       - queued
@@ -5340,20 +7330,28 @@ components:
         * `ended` - Ended
         * `failed` - Failed
         * `cancelled` - Cancelled
-    StatusEnum:
+    Status520Enum:
       enum:
-      - pending
-      - success
-      - failed
-      - expired
+      - new
+      - in_progress
+      - done
       - cancelled
       type: string
       description: |-
-        * `pending` - Pending
-        * `success` - Success
-        * `failed` - Failed
-        * `expired` - Expired
-        * `cancelled` - Cancelled
+        * `new` - new
+        * `in_progress` - in_progress
+        * `done` - done
+        * `cancelled` - cancelled
+    StatusC3bEnum:
+      enum:
+      - active
+      - suspended
+      - revoked
+      type: string
+      description: |-
+        * `active` - Active
+        * `suspended` - Suspended
+        * `revoked` - Revoked
     Transcript:
       type: object
       properties:
@@ -5424,6 +7422,14 @@ components:
       required:
       - image
       - name
+    Type1c2Enum:
+      enum:
+      - user
+      - service
+      type: string
+      description: |-
+        * `user` - User Token
+        * `service` - Service Account Token
     TypeDffEnum:
       enum:
       - text
@@ -5439,40 +7445,54 @@ components:
     User:
       type: object
       description: |-
-        Canonical user payload returned by login.
+        Canonical user payload returned by login and /auth/me/.
 
-        ``is_superuser`` / ``is_staff`` are platform-level flags (unrelated to the
-        org-scoped ``role``) and are read-only — they can only be granted from
-        Django admin, never through the API. They are also dropped from the payload
-        when false, so they only ship to the handful of accounts that hold them.
-        Consumers must treat an absent flag as false (fail closed).
+        ``is_superuser`` / ``is_staff`` / ``is_account_manager`` are platform-level flags (unrelated to the
+        org-scoped membership roles) and are read-only — they can only be granted
+        from Django admin, never through the API. They are also dropped from the
+        payload when false, so they only ship to the handful of accounts that hold
+        them. Consumers must treat an absent flag as false (fail closed).
+
+        ``role`` is the deprecated global role; use ``memberships[].role``.
       properties:
         id:
           type: string
           readOnly: true
         username:
           type: string
+          readOnly: true
           description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
             only.
-          pattern: ^[\w.@+-]+$
-          maxLength: 150
         email:
           type: string
           format: email
+          readOnly: true
           title: Email address
-          maxLength: 254
         first_name:
           type: string
           maxLength: 150
         last_name:
           type: string
           maxLength: 150
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
         role:
-          $ref: '#/components/schemas/RoleEnum'
+          allOf:
+          - $ref: '#/components/schemas/UserRoleEnum'
+          readOnly: true
         organization_ids:
           type: array
           items:
             type: string
+          readOnly: true
+        memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserMembership'
           readOnly: true
         is_superuser:
           type: boolean
@@ -5485,18 +7505,172 @@ components:
           readOnly: true
           title: Staff status
           description: Designates whether the user can log into this admin site.
+        is_account_manager:
+          type: boolean
+          readOnly: true
+          description: 'Sophy employee without Django admin access: hidden from customers,
+            full access in the organizations and projects they are assigned to.'
+      required:
+      - email
+      - id
+      - is_active
+      - memberships
+      - organization_ids
+      - role
+      - username
+    UserAPITokenUpdate:
+      type: object
+      description: Binding is fixed at creation; only the label, scopes and expiry
+        change.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          description: Token name/description
+          maxLength: 255
+        type:
+          allOf:
+          - $ref: '#/components/schemas/Type1c2Enum'
+          readOnly: true
+        prefix:
+          type: string
+          readOnly: true
+          description: First characters of the secret, shown so a key can be recognised.
+        user_id:
+          type: string
+          readOnly: true
+          nullable: true
+        service_account_id:
+          type: string
+          readOnly: true
+          nullable: true
+        organization:
+          type: string
+          format: uuid
+          nullable: true
+          description: Limit the key to one organization. Implied by `project`.
+        project:
+          type: string
+          format: uuid
+          nullable: true
+          description: Bind the key to one project (recommended). Requests with a
+            bound key need no Sophy-Project header.
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionEnum'
+          description: Limit the key to these permissions. Empty = the owner's permissions.
+            A key never exceeds its owner, whatever its scopes say.
+        is_active:
+          type: boolean
+          readOnly: true
+        revoked_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Token expiration date. Leave blank for unlimited.
+        last_used_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        is_expired:
+          type: boolean
+          readOnly: true
+        is_valid:
+          type: boolean
+          readOnly: true
+        is_legacy:
+          type: boolean
+          readOnly: true
+          description: Issued by the old key system; deprecated, to be replaced with
+            a new key.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - is_active
+      - is_expired
+      - is_legacy
+      - is_valid
+      - last_used_at
+      - name
+      - prefix
+      - revoked_at
+      - service_account_id
+      - type
+      - updated_at
+      - user_id
+    UserMembership:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        organization:
+          $ref: '#/components/schemas/OrganizationRef'
+        role:
+          $ref: '#/components/schemas/Role978Enum'
+        status:
+          $ref: '#/components/schemas/StatusC3bEnum'
       required:
       - id
-      - organization_ids
-      - username
-    VersionIDEnum:
+      - organization
+    UserRef:
+      type: object
+      description: |-
+        A person shown next to a record. Sophy employees render as null to customers.
+
+        Fails closed: without a request in the context they are hidden too.
+      properties:
+        id:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        is_sophy:
+          type: boolean
+          readOnly: true
+      required:
+      - email
+      - first_name
+      - id
+      - is_sophy
+      - last_name
+    UserRoleEnum:
       enum:
-      - production
-      - development
+      - owner
+      - admin
+      - agent
       type: string
       description: |-
-        * `production` - production
-        * `development` - development
+        * `owner` - Owner
+        * `admin` - Admin
+        * `agent` - Agent
   securitySchemes:
     jwtAuth:
       type: http

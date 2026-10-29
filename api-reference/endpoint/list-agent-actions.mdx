@@ -1,0 +1,64 @@
+---
+title: 'List Agent Actions'
+openapi: 'GET /api/v1/actions/'
+---
+
+List the business records your agents produced during conversations — contact requests, orders, support tickets, appointment requests — newest first. The project comes from the `Sophy-Project` header, or from the API key when the key is bound to a project. Requires the `actions:read` permission.
+
+An action has two independent states:
+
+- `status` is the business lifecycle, advanced by your team: `new` → `in_progress` → `done` | `cancelled`
+- `steps` are the integrations that ran for it (e.g. the notification email), each `ok`, `skipped` or `error`. `needs_retry` is `true` when a step failed
+
+## Query Parameters
+
+- `type` (string): Action type, e.g. `contact_request`
+- `status` (string): `new`, `in_progress`, `done` or `cancelled`
+- `needs_retry` (boolean): Only actions with a failed step
+- `agent_id` (string): Only actions of this agent
+- `date_from`, `date_to` (datetime): Creation time range (ISO 8601)
+- `offset` (integer): Number of items to skip (default 0)
+- `limit` (integer): Max results to return (default 100, max 1000)
+
+## Response
+
+```json
+{
+  "count": 1,
+  "offset": 0,
+  "limit": 100,
+  "results": [
+    {
+      "id": "6a1f0c2e9b3d4e5f6a7b8c9d",
+      "type": "contact_request",
+      "status": "new",
+      "project_id": "uuid",
+      "agent_id": "59",
+      "agent_name": "Nora",
+      "source": { "channel": "voice", "call_type": "inboundPhoneCall" },
+      "customer": { "phone": "05550000000" },
+      "data": { "full_name": "Ayşe Kaya", "phone_number": "05550000000" },
+      "steps": [
+        { "name": "email", "status": "ok", "attempts": 1, "error": "" }
+      ],
+      "history": [
+        { "at": "2026-10-27T11:03:23Z", "by": "", "event": "created", "note": "" },
+        { "at": "2026-10-27T11:03:23Z", "by": "", "event": "step:email:ok", "note": "" }
+      ],
+      "needs_retry": false,
+      "created_at": "2026-10-27T11:03:23Z",
+      "updated_at": "2026-10-27T11:03:23Z"
+    }
+  ]
+}
+```
+
+The `id` is the request number shown in notification emails.
+
+## Example
+
+```bash
+curl -X GET "https://platform-api.sophy.co/api/v1/actions/?type=contact_request&needs_retry=true" \
+  -H "Authorization: Bearer suk_..." \
+  -H "Sophy-Project: {project_id}"
+```

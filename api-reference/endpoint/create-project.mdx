@@ -1,6 +1,6 @@
 ---
 title: 'Create Project'
-openapi: 'POST /api/organizations/{organization_id}/projects/'
+openapi: 'POST /api/v1/organizations/{organization_id}/projects/'
 ---
 
 Create a new project in an organization.
@@ -35,7 +35,7 @@ Returns the created project with a 201 status code.
 ## Example
 
 ```bash
-curl -X POST https://platform-api.sophy.co/api/auth/organizations/{organization_id}/projects/ \
+curl -X POST https://platform-api.sophy.co/api/v1/organizations/{organization_id}/projects/ \
   -H "Authorization: Bearer suk_..." \
   -H "Content-Type: application/json" \
   -d '{"name": "My New Project"}'

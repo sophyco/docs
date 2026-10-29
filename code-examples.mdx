@@ -45,14 +45,14 @@ import requests
 BASE_URL = "https://platform-api.sophy.co"
 
 login_data = {
-    "username": "sophyadmin",
+    "email": "admin@example.com",
     "password": "password123"
 }
 
-response = requests.post(f"{BASE_URL}/api/auth/login/", json=login_data)
+response = requests.post(f"{BASE_URL}/api/v1/auth/login/", json=login_data)
 
 if response.status_code == 200:
-    token = response.json()["token"]
+    token = response.json()["access_token"]
     print(f"Token: {token}")
 else:
     print(f"Login failed: {response.json()}")
@@ -74,7 +74,7 @@ token_data = {
     "expires_at": "2026-12-31T23:59:59Z"
 }
 
-response = requests.post(f"{BASE_URL}/api/auth/tokens/", json=token_data, headers=headers)
+response = requests.post(f"{BASE_URL}/api/v1/auth/tokens/", json=token_data, headers=headers)
 
 new_token = response.json()
 print(f"Created token: {new_token['token']}")
@@ -177,13 +177,13 @@ const axios = require('axios');
 const BASE_URL = "https://platform-api.sophy.co";
 
 const loginData = {
-  username: "sophyadmin",
+  email: "admin@example.com",
   password: "password123"
 };
 
-axios.post(`${BASE_URL}/api/auth/login/`, loginData)
+axios.post(`${BASE_URL}/api/v1/auth/login/`, loginData)
   .then(res => {
-    const token = res.data.token;
+    const token = res.data.access_token;
     console.log(`Token: ${token}`);
   })
   .catch(err => console.error(`Login failed: ${err.response.data}`));
@@ -256,7 +256,7 @@ class SophyAPIClient {
   async createToken(type, name, expiresAt = null) {
     try {
       const response = await axios.post(
-        `${this.baseUrl}/api/auth/tokens/`,
+        `${this.baseUrl}/api/v1/auth/tokens/`,
         { type, name, expires_at: expiresAt },
         { headers: this.headers }
       );
@@ -287,25 +287,25 @@ PROJECT_ID="be02a6b2-0061-4849-983b-26504bde1144"
 ### Login
 
 ```bash
-curl -X POST ${BASE_URL}/api/auth/login/ \
+curl -X POST ${BASE_URL}/api/v1/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "sophyadmin",
+    "email": "admin@example.com",
     "password": "password123"
-  }' | jq .token
+  }' | jq .access_token
 ```
 
 ### List Tokens
 
 ```bash
-curl -X GET ${BASE_URL}/api/auth/tokens/ \
+curl -X GET ${BASE_URL}/api/v1/auth/tokens/ \
   -H "Authorization: Bearer ${TOKEN}" | jq .
 ```
 
 ### Create Token
 
 ```bash
-curl -X POST ${BASE_URL}/api/auth/tokens/ \
+curl -X POST ${BASE_URL}/api/v1/auth/tokens/ \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -363,10 +363,10 @@ curl ... | jq '.results | map({role: .role, message: .message})'
 
 **Login:**
 ```
-POST {{base_url}}/api/auth/login/
+POST {{base_url}}/api/v1/auth/login/
 Body (JSON):
 {
-  "username": "sophyadmin",
+  "email": "admin@example.com",
   "password": "password123"
 }
 ```
@@ -381,7 +381,7 @@ Headers:
 
 **Create Token:**
 ```
-POST {{base_url}}/api/auth/tokens/
+POST {{base_url}}/api/v1/auth/tokens/
 Headers:
 - Authorization: Bearer {{token}}
 Body (JSON):

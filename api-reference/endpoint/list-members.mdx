@@ -1,0 +1,6 @@
+---
+title: 'List Members'
+openapi: 'GET /api/v1/organizations/{organization_id}/members/'
+---
+
+People in the organization with role and status. Filter with `search` (email or name), `status`, `role`; revoked members are only listed with `status=revoked`. Needs `members:read`.

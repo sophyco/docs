@@ -33,9 +33,11 @@ curl https://platform-api.sophy.co/api/v1/calls/ \
 
 An API key that is bound to a project already carries its project, so you can leave the header out. Studio sessions and unbound keys must send it.
 
-## Migrating from project-in-path routes
+## Migrating from pre-v1 routes
 
-The earlier routes put the project in the URL. They still work during migration, but every response carries a `Deprecation` header. Move to `/api/v1/` by dropping the `{project_id}` segment and sending it as `Sophy-Project` instead:
+The pre-v1 routes still work during migration, but every response carries a `Deprecation` header and a `Link` to `/api/v1/`.
+
+**Project-scoped resources** put the project in the URL. Drop the `{project_id}` segment and send it as `Sophy-Project` instead:
 
 | Deprecated | Current |
 | --- | --- |
@@ -45,3 +47,13 @@ The earlier routes put the project in the URL. They still work during migration,
 | `/api/analytics/{project_id}/` | `/api/v1/analytics/` |
 
 The rest of the path is unchanged. For example, `/api/calls/{project_id}/{call_id}/messages/` becomes `/api/v1/calls/{call_id}/messages/`.
+
+**Auth, organizations and projects** only gain the `/v1` prefix. Project settings move out from under the organization, since a project's id is enough to find it:
+
+| Deprecated | Current |
+| --- | --- |
+| `/api/auth/…` | `/api/v1/auth/…` |
+| `/api/organizations/…` | `/api/v1/organizations/…` |
+| `/api/organizations/{organization_id}/projects/{project_id}/settings/` | `/api/v1/projects/{project_id}/settings/` |
+
+Messaging endpoints already live at `/api/communication/v1/…` and are unchanged.

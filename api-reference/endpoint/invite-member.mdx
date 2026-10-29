@@ -1,0 +1,6 @@
+---
+title: 'Add or Invite Member'
+openapi: 'POST /api/v1/organizations/{organization_id}/members/'
+---
+
+Send `email` and `role` (`owner`, `admin`, `member`). An existing account is added directly; a new email gets an inactive account and an invitation email. `409` if already a member. Only owners can add owners. Needs `members:manage`.

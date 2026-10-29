@@ -1,34 +1,61 @@
 ---
 title: 'Login'
-openapi: 'POST /api/auth/login/'
+openapi: 'POST /api/v1/auth/login/'
 ---
 
-Login with username and password to get an API token.
+Log in with email and password to start a Studio session.
 
 <Note>
-This is the only endpoint that doesn't require authentication.
+For server-to-server integrations, create an API key with [Create API Token](/api-reference/endpoint/create-token)
+or a [service account key](/api-reference/endpoint/create-service-account-key) instead of storing a password.
 </Note>
 
 ## Request Body
 
-- `username` (string, required): Username
+- `email` (string, required): The account's email address (case-insensitive)
 - `password` (string, required): Password
 
 ## Response
 
-Returns user information and an API token (suk_*).
-
 ```json
 {
-  "token": "suk_...",
+  "access_token": "eyJ...",
   "user": {
-    "id": "uuid",
+    "id": "1",
     "username": "string",
-    "email": "string",
+    "email": "user@example.com",
     "first_name": "string",
     "last_name": "string",
-    "role": "agent|admin|owner",
-    "organization_id": "uuid"
+    "is_active": true,
+    "organization_ids": ["uuid"],
+    "memberships": [
+      {"id": 12, "organization": {"id": "uuid", "name": "Acme"}, "role": "owner|admin|member", "status": "active|suspended"}
+    ],
+    "role": "agent|admin|owner"
   }
 }
+```
+
+The refresh token is **not** in the body. It is set as an httpOnly cookie, `sophy_refresh`
+(`SameSite=Lax`, path `/api/v1/auth/`, `Secure` in production). Browsers send it automatically
+when the request is made with credentials (`fetch(url, {credentials: 'include'})`).
+
+### Response fields
+
+- `access_token` (string): Send as `Authorization: Bearer <access_token>`. Valid for 15 minutes — keep it in memory and renew it with [Refresh Token](/api-reference/endpoint/refresh-token)
+- `user.memberships` (array): Organizations the user belongs to, with the role and status in each. Revoked memberships are not listed
+- `user.organization_ids` (array of strings): Organizations with an **active** membership
+- `user.role` (string): Deprecated global role — use `memberships[].role`
+- `user.is_superuser` / `user.is_staff` (boolean): Platform-level flags, present **only when true** — treat an absent flag as `false`
+
+Wrong credentials, or a deactivated account, return `400` with `"Invalid email or password."`.
+Too many attempts from one IP return `429` with a `Retry-After` header.
+
+## Example
+
+```bash
+curl -X POST https://platform-api.sophy.co/api/v1/auth/login/ \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{"email": "user@example.com", "password": "..."}'
 ```
